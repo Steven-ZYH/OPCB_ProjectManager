@@ -1,0 +1,1881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>SIXLAB Project Control Blueprint</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="SIXLAB Project Control Blueprint" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;SIXLAB Project Control Blueprint&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(
+    --background,
+    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
+  ) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --color-background-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --card: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --card-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --popover: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255), rgb(45 45 45))
+  );
+  --popover-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --primary: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --primary-foreground: var(
+    --color-text-inverse,
+    light-dark(rgb(255 255 255), rgb(13 13 13))
+  );
+  --secondary: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
+  );
+  --secondary-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: var(
+    --color-text-secondary,
+    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
+  );
+  --accent: var(
+    --color-background-info,
+    light-dark(rgb(229 242 255), rgb(13 39 63))
+  );
+  --accent-foreground: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --destructive: var(
+    --color-text-warning,
+    light-dark(rgb(226 85 7), rgb(255 133 73))
+  );
+  --border: var(
+    --color-border-secondary,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+  --input: var(
+    --color-border-primary,
+    light-dark(
+      rgb(26 28 31 / 11.8%),
+      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+    )
+  );
+  --ring: var(
+    --color-ring-primary,
+    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
+  );
+  --font-size-base: var(--font-text-md-size, 14px);
+  --red: light-dark(rgb(186 38 35), rgb(250 66 62));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: var(--border-radius-lg, 12.5px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
+  --color-background-primary: var(
+    --background,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --color-text-primary: var(
+    --foreground,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --color-border-secondary: var(
+    --border,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed=&quot;true&quot;],
+    [aria-selected=&quot;true&quot;],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+/* Model-authored chart rules can otherwise stretch icons after these styles load. */
+svg.lucide {
+  display: block;
+  width: 16px !important;
+  height: 16px !important;
+  flex: none;
+  margin: 0 !important;
+  stroke-width: 1.6;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;spc-blueprint-v1&quot;&gt;
+  &lt;style&gt;
+    #spc-blueprint-v1 {
+      color: var(--foreground);
+      width: 100%;
+    }
+    #spc-blueprint-v1 .spb-nav,
+    #spc-blueprint-v1 .spb-phase-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    #spc-blueprint-v1 .spb-panel[hidden] {
+      display: none;
+    }
+    #spc-blueprint-v1 .spb-summary {
+      margin-bottom: 1rem;
+    }
+    #spc-blueprint-v1 .spb-summary progress {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    #spc-blueprint-v1 .spb-section {
+      margin: 1.25rem 0;
+    }
+    #spc-blueprint-v1 .spb-section &gt; h2,
+    #spc-blueprint-v1 .spb-section &gt; h3 {
+      margin-bottom: 0.75rem;
+    }
+    #spc-blueprint-v1 .spb-architecture {
+      display: grid;
+      gap: 0.75rem;
+    }
+    #spc-blueprint-v1 .spb-layer {
+      display: grid;
+      grid-template-columns: minmax(7rem, 0.7fr) minmax(0, 3.3fr);
+      gap: 0.75rem;
+      align-items: start;
+    }
+    #spc-blueprint-v1 .spb-layer-label {
+      color: var(--muted-foreground);
+      padding-top: 0.65rem;
+    }
+    #spc-blueprint-v1 .spb-node-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    #spc-blueprint-v1 .spb-flow {
+      color: var(--muted-foreground);
+      text-align: center;
+    }
+    #spc-blueprint-v1 .spb-detail {
+      margin-top: 1rem;
+    }
+    #spc-blueprint-v1 .spb-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem 1rem;
+      margin-top: 0.75rem;
+    }
+    #spc-blueprint-v1 .spb-detail-grid dt {
+      color: var(--muted-foreground);
+      margin-bottom: 0.25rem;
+    }
+    #spc-blueprint-v1 .spb-detail-grid dd {
+      margin: 0;
+    }
+    #spc-blueprint-v1 .spb-phase-track {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.4rem;
+      margin: 1rem 0;
+    }
+    #spc-blueprint-v1 .spb-phase-segment {
+      border-top: 0.35rem solid var(--border);
+      padding-top: 0.5rem;
+      color: var(--muted-foreground);
+    }
+    #spc-blueprint-v1 .spb-phase-segment.is-active {
+      border-top-color: var(--viz-series-1);
+      color: var(--foreground);
+    }
+    #spc-blueprint-v1 .spb-gate-list,
+    #spc-blueprint-v1 .spb-deliverable-list {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+    }
+    #spc-blueprint-v1 .spb-note {
+      margin: 1rem 0;
+    }
+    #spc-blueprint-v1 .spb-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+    #spc-blueprint-v1 .spb-check-cell {
+      width: 3rem;
+    }
+    #spc-blueprint-v1 .spb-task-id-cell {
+      width: 4.5rem;
+    }
+    #spc-blueprint-v1 .spb-task-detail {
+      margin-top: 1rem;
+    }
+    #spc-blueprint-v1 .spb-task-actions {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+    }
+    @media (max-width: 640px) {
+      #spc-blueprint-v1 .spb-layer {
+        grid-template-columns: 1fr;
+      }
+      #spc-blueprint-v1 .spb-node-grid,
+      #spc-blueprint-v1 .spb-detail-grid {
+        grid-template-columns: 1fr;
+      }
+      #spc-blueprint-v1 .spb-phase-track {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+  &lt;/style&gt;
+
+  &lt;nav class=&quot;spb-nav&quot; aria-label=&quot;蓝图视图&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-spb-panel=&quot;requirements&quot; aria-pressed=&quot;true&quot;&gt;
+      &lt;i data-lucide=&quot;list-checks&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;需求基线
+    &lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-panel=&quot;architecture&quot; aria-pressed=&quot;false&quot;&gt;
+      &lt;i data-lucide=&quot;network&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;框架图
+    &lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-panel=&quot;roadmap&quot; aria-pressed=&quot;false&quot;&gt;
+      &lt;i data-lucide=&quot;route&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;深度实施路线
+    &lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-panel=&quot;feasibility&quot; aria-pressed=&quot;false&quot;&gt;
+      &lt;i data-lucide=&quot;badge-check&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;可行性
+    &lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-panel=&quot;permissions&quot; aria-pressed=&quot;false&quot;&gt;
+      &lt;i data-lucide=&quot;shield-check&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;权限矩阵
+    &lt;/button&gt;
+  &lt;/nav&gt;
+
+  &lt;section class=&quot;spb-panel&quot; data-spb-panel-content=&quot;requirements&quot;&gt;
+    &lt;div class=&quot;card viz-stat spb-summary&quot; aria-live=&quot;polite&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;当前需求基线&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot;&gt;&lt;span data-spb-confirmed&gt;12&lt;/span&gt; / 12&lt;/div&gt;
+      &lt;div&gt;取消任一项即可标记为待澄清；路线图按推荐默认值生成。&lt;/div&gt;
+      &lt;progress data-spb-progress max=&quot;12&quot; value=&quot;12&quot;&gt;12 / 12&lt;/progress&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;table-responsive&quot;&gt;
+      &lt;table class=&quot;table table-sm&quot;&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th class=&quot;spb-check-cell&quot;&gt;确认&lt;/th&gt;
+            &lt;th&gt;需求&lt;/th&gt;
+            &lt;th&gt;推荐定义&lt;/th&gt;
+            &lt;th&gt;首发阶段&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;保留现有软件&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;保留现有软件&lt;/td&gt;
+            &lt;td&gt;现有菜单栏、DJI4G 视觉、PR/路线图/审核机能力全部保留，不推倒重写。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P0&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;桌面端主窗口&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;桌面端主窗口&lt;/td&gt;
+            &lt;td&gt;菜单栏继续做快速入口，新增可常驻、可扩展的原生 macOS 主窗口。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P2&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;项目注册表&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;管理全部项目&lt;/td&gt;
+            &lt;td&gt;通过 Project Registry 统一仓库、本地 checkout、环境、路线图、Session 与策略。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P1&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;Session 管理&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;管理全部 Session&lt;/td&gt;
+            &lt;td&gt;官方 Codex App Server 读取 active/archived/running/waiting，后续开放 resume/steer/interrupt。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P2–P3&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;路线图管理&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;管理全部路线图&lt;/td&gt;
+            &lt;td&gt;仓库文件仍是正文事实源；桌面端管理显示、阶段、负责人和 PR/Session 绑定。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P2&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;PR 管理&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;管理全部 PR&lt;/td&gt;
+            &lt;td&gt;统一 current-head Review、CI、冲突、main 兼容性、Session、审核机与部署证据。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P2–P3&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;环境状态&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;环境与部署状态&lt;/td&gt;
+            &lt;td&gt;测试、staging、canary、production 独立陈述，显示 marker、版本、健康与证据时间。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P2–P4&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;密钥能力管理&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;密钥能力管理&lt;/td&gt;
+            &lt;td&gt;管理 metadata、scope、fingerprint、轮换和受控调用；模型与 UI 默认不读取明文。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P4&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;统一审计&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;统一审计时间线&lt;/td&gt;
+            &lt;td&gt;记录状态来源、用户确认、动作、结果和验证证据，不记录隐藏推理或密钥值。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P1&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;分级权限&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;分级开放写操作&lt;/td&gt;
+            &lt;td&gt;先只读，再按风险开放 Session、PR、Review、merge、deploy 和 secret-use。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P3–P4&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;本地优先&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;本地优先架构&lt;/td&gt;
+            &lt;td&gt;Codex、Keychain、SSH 和 checkout 留在 Mac；远程控制面作为后续扩展。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P1&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;input class=&quot;form-check-input&quot; type=&quot;checkbox&quot; data-spb-requirement checked aria-label=&quot;事实新鲜度&quot;&gt;&lt;/td&gt;
+            &lt;td&gt;事实与缓存分离&lt;/td&gt;
+            &lt;td&gt;所有状态必须标记 live、cached、fetching、unreachable 或 unknown。&lt;/td&gt;
+            &lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;P1&lt;/span&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card spb-note&quot;&gt;
+      推荐产品定义：SIXLAB Project Control 是原生 macOS、本地优先、审计驱动的项目控制中心；菜单栏是快捷入口，主窗口是完整工作台。
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;spb-panel&quot; data-spb-panel-content=&quot;architecture&quot; hidden&gt;
+    &lt;div class=&quot;spb-architecture&quot; role=&quot;group&quot; aria-label=&quot;Project Control 分层架构图&quot;&gt;
+      &lt;div class=&quot;spb-layer&quot;&gt;
+        &lt;div class=&quot;spb-layer-label&quot;&gt;外部事实源&lt;/div&gt;
+        &lt;div class=&quot;spb-node-grid&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;github&quot;&gt;GitHub&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;PR · Review · CI&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;codex&quot;&gt;Codex App Server&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;Thread · Turn · Status&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;repos&quot;&gt;本地仓库&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;Roadmap · Checkout&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;review&quot;&gt;审核机&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;Queue · Audit · Signature&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;environment&quot;&gt;环境探针&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;Marker · Health · Version&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;secrets&quot;&gt;Secret Providers&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;Keychain · Actions · KMS&lt;/span&gt;&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;spb-flow&quot; aria-hidden=&quot;true&quot;&gt;↓ 标准化适配器&lt;/div&gt;
+      &lt;div class=&quot;spb-layer&quot;&gt;
+        &lt;div class=&quot;spb-layer-label&quot;&gt;本地控制平面&lt;/div&gt;
+        &lt;div class=&quot;spb-node-grid&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;registry&quot;&gt;Project Registry&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;项目与拓扑&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;normalizer&quot;&gt;State Normalizer&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;事实与新鲜度&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;policy&quot;&gt;Policy Engine&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;权限与门禁&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;commands&quot;&gt;Command Orchestrator&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;Prepare → Verify&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;audit&quot;&gt;Event &amp; Audit Store&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;SQLite · Outbox&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;broker&quot;&gt;Secret Capability Broker&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;代执行 · 不回传值&lt;/span&gt;&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;spb-flow&quot; aria-hidden=&quot;true&quot;&gt;↓ 统一只读模型与受控命令&lt;/div&gt;
+      &lt;div class=&quot;spb-layer&quot;&gt;
+        &lt;div class=&quot;spb-layer-label&quot;&gt;桌面体验&lt;/div&gt;
+        &lt;div class=&quot;spb-node-grid&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;menubar&quot;&gt;菜单栏&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;告警 · 快速动作&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;desktop&quot;&gt;主窗口&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;项目 · Session · PR&lt;/span&gt;&lt;/button&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn viz-tile&quot; data-spb-node=&quot;notifications&quot;&gt;通知与审批&lt;br&gt;&lt;span class=&quot;text-muted&quot;&gt;Bark · DeptChat · 系统通知&lt;/span&gt;&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card spb-detail&quot; aria-live=&quot;polite&quot;&gt;
+      &lt;h3 data-spb-node-title&gt;Project Registry&lt;/h3&gt;
+      &lt;div data-spb-node-summary&gt;统一声明项目、仓库、本地 checkout、默认分支、环境、路线图、Session 查询范围与权限策略。&lt;/div&gt;
+      &lt;dl class=&quot;spb-detail-grid&quot;&gt;
+        &lt;div&gt;&lt;dt&gt;事实源&lt;/dt&gt;&lt;dd data-spb-node-source&gt;版本化 registry + 实时适配器&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;写入边界&lt;/dt&gt;&lt;dd data-spb-node-write&gt;配置变更必须审计&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;关键门禁&lt;/dt&gt;&lt;dd data-spb-node-gate&gt;schema 校验与项目作用域&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;落地阶段&lt;/dt&gt;&lt;dd data-spb-node-phase&gt;P1&lt;/dd&gt;&lt;/div&gt;
+      &lt;/dl&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;spb-panel&quot; data-spb-panel-content=&quot;roadmap&quot; hidden&gt;
+    &lt;div class=&quot;spb-phase-track&quot; aria-hidden=&quot;true&quot;&gt;
+      &lt;div class=&quot;spb-phase-segment is-active&quot; data-spb-phase-segment=&quot;P0&quot;&gt;P0&lt;br&gt;保全&lt;/div&gt;
+      &lt;div class=&quot;spb-phase-segment&quot; data-spb-phase-segment=&quot;P1&quot;&gt;P1&lt;br&gt;内核&lt;/div&gt;
+      &lt;div class=&quot;spb-phase-segment&quot; data-spb-phase-segment=&quot;P2&quot;&gt;P2&lt;br&gt;只读桌面&lt;/div&gt;
+      &lt;div class=&quot;spb-phase-segment&quot; data-spb-phase-segment=&quot;P3&quot;&gt;P3&lt;br&gt;控制动作&lt;/div&gt;
+      &lt;div class=&quot;spb-phase-segment&quot; data-spb-phase-segment=&quot;P4&quot;&gt;P4&lt;br&gt;密钥环境&lt;/div&gt;
+      &lt;div class=&quot;spb-phase-segment&quot; data-spb-phase-segment=&quot;P5&quot;&gt;P5&lt;br&gt;跨项目&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;spb-phase-nav&quot; aria-label=&quot;实施阶段&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-spb-phase=&quot;P0&quot; aria-pressed=&quot;true&quot;&gt;P0 · 可重建基线&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-phase=&quot;P1&quot; aria-pressed=&quot;false&quot;&gt;P1 · 控制平面内核&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-phase=&quot;P2&quot; aria-pressed=&quot;false&quot;&gt;P2 · 只读桌面 V1&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-phase=&quot;P3&quot; aria-pressed=&quot;false&quot;&gt;P3 · Session/PR 控制&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-phase=&quot;P4&quot; aria-pressed=&quot;false&quot;&gt;P4 · Secret/环境&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-spb-phase=&quot;P5&quot; aria-pressed=&quot;false&quot;&gt;P5 · 多项目自动化&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card&quot; aria-live=&quot;polite&quot;&gt;
+      &lt;div class=&quot;viz-row&quot;&gt;
+        &lt;span class=&quot;viz-badge&quot; data-spb-phase-code&gt;P0&lt;/span&gt;
+        &lt;span data-spb-phase-window&gt;建议窗口：1 周&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;h2 data-spb-phase-title&gt;无损建立可重建基线&lt;/h2&gt;
+      &lt;p data-spb-phase-outcome&gt;把当前已运行但未提交的实现，变成可从干净 checkout 重建和验证的版本事实源。&lt;/p&gt;
+      &lt;div class=&quot;spb-detail-grid&quot;&gt;
+        &lt;div&gt;
+          &lt;h3&gt;交付物&lt;/h3&gt;
+          &lt;ul class=&quot;spb-deliverable-list&quot; data-spb-phase-deliverables&gt;
+            &lt;li&gt;恢复分支与原子基线提交&lt;/li&gt;
+            &lt;li&gt;从 origin/main 建立干净集成线&lt;/li&gt;
+            &lt;li&gt;源码、Harness、安装包证据清单&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;h3&gt;退出门&lt;/h3&gt;
+          &lt;ul class=&quot;spb-gate-list&quot; data-spb-phase-gates&gt;
+            &lt;li&gt;干净 checkout 可构建&lt;/li&gt;
+            &lt;li&gt;12 项 Harness 与渲染对比通过&lt;/li&gt;
+            &lt;li&gt;现有能力逐项验收，无密钥进入 Git&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;dl class=&quot;spb-detail-grid&quot;&gt;
+        &lt;div&gt;&lt;dt&gt;开始前必须具备&lt;/dt&gt;&lt;dd data-spb-phase-prerequisites&gt;冻结当前工作树，不进行 rebase、reset、clean 或覆盖式同步。&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;本阶段改变什么&lt;/dt&gt;&lt;dd data-spb-phase-architecture&gt;只改变版本事实与可重建性，不改用户功能和外部行为。&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;权限边界&lt;/dt&gt;&lt;dd data-spb-phase-permission&gt;本地保全可执行；提交、推送、PR、安装替换均需分别授权。&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;失败时怎么退&lt;/dt&gt;&lt;dd data-spb-phase-rollback&gt;保留原分支、安装包、二进制哈希、binary patch 和未跟踪文件清单，任何一步失败都回到只读状态。&lt;/dd&gt;&lt;/div&gt;
+      &lt;/dl&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;spb-section&quot;&gt;
+      &lt;h3&gt;执行工作分解&lt;/h3&gt;
+      &lt;div class=&quot;table-responsive&quot;&gt;
+        &lt;table class=&quot;table table-sm&quot;&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;&lt;th class=&quot;spb-task-id-cell&quot;&gt;步骤&lt;/th&gt;&lt;th&gt;具体工作&lt;/th&gt;&lt;th&gt;必须产物&lt;/th&gt;&lt;th&gt;完成证据&lt;/th&gt;&lt;th&gt;权限&lt;/th&gt;&lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody data-spb-task-rows&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card spb-task-detail&quot; aria-live=&quot;polite&quot;&gt;
+      &lt;div class=&quot;viz-row&quot;&gt;
+        &lt;span class=&quot;viz-badge&quot; data-spb-task-id&gt;P0.1&lt;/span&gt;
+        &lt;span data-spb-task-depends&gt;前置：无&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;h2 data-spb-task-title&gt;冻结并盘点当前事实&lt;/h2&gt;
+      &lt;p data-spb-task-why&gt;先确认当前运行版到底由哪些源码、未跟踪文件、缓存、安装包和远端依赖组成，避免后续保全遗漏。&lt;/p&gt;
+      &lt;div class=&quot;spb-detail-grid&quot;&gt;
+        &lt;div&gt;
+          &lt;h3&gt;要执行的动作&lt;/h3&gt;
+          &lt;ul class=&quot;spb-task-actions&quot; data-spb-task-actions&gt;
+            &lt;li&gt;记录 branch、HEAD、origin/main、ahead/behind、status 和完整 diff 统计。&lt;/li&gt;
+            &lt;li&gt;列出未跟踪文件、Harness、安装包路径、运行进程、签名和 SHA-256。&lt;/li&gt;
+            &lt;li&gt;把现有功能按 PR、Session、路线图、审核机、缓存、通知拆成验收清单。&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;h3&gt;落点与验证&lt;/h3&gt;
+          &lt;dl&gt;
+            &lt;div&gt;&lt;dt&gt;涉及模块&lt;/dt&gt;&lt;dd data-spb-task-files&gt;整个仓库，只读；重点是 native/、tests/、review-worker/、build/harness/。&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;产物&lt;/dt&gt;&lt;dd data-spb-task-output&gt;版本事实清单、功能清单、文件清单、安装产物清单。&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;验证&lt;/dt&gt;&lt;dd data-spb-task-evidence&gt;清单中的 SHA、文件数、diff 统计与 handoff 逐项一致。&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;权限&lt;/dt&gt;&lt;dd data-spb-task-permission&gt;只读，无需提交或外部写权限。&lt;/dd&gt;&lt;/div&gt;
+          &lt;/dl&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;spb-detail-grid&quot;&gt;
+        &lt;div&gt;&lt;dt&gt;失败信号&lt;/dt&gt;&lt;dd data-spb-task-failure&gt;只记录 Git commit，遗漏未提交源码或把 Harness 缓存当源码。&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;回退/恢复&lt;/dt&gt;&lt;dd data-spb-task-rollback&gt;不修改任何状态；发现不一致时停止并补清单。&lt;/dd&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card spb-note&quot;&gt;
+      时间是规划窗口，不是工期承诺。每个工作包都有独立产物和证据；阶段退出门没有全部通过，就不进入下一阶段。
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;spb-panel&quot; data-spb-panel-content=&quot;feasibility&quot; hidden&gt;
+    &lt;div class=&quot;table-responsive&quot;&gt;
+      &lt;table class=&quot;table table-sm&quot;&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;&lt;th&gt;能力&lt;/th&gt;&lt;th&gt;可行性&lt;/th&gt;&lt;th&gt;现有基础&lt;/th&gt;&lt;th&gt;关键限制&lt;/th&gt;&lt;th&gt;推荐阶段&lt;/th&gt;&lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;&lt;td&gt;原生桌面主窗口&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可直接实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;AppKit 菜单栏与视觉组件&lt;/td&gt;&lt;td&gt;先拆状态与 UI 编排&lt;/td&gt;&lt;td&gt;P2&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;全部 Session 只读聚合&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可直接实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;已有 Resolver 与官方 App Server 调用&lt;/td&gt;&lt;td&gt;改成长连接与规范化状态&lt;/td&gt;&lt;td&gt;P2&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Session 继续、steer、中断&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可实现需门禁&lt;/span&gt;&lt;/td&gt;&lt;td&gt;官方 thread/turn API&lt;/td&gt;&lt;td&gt;运行中不能并发不兼容 turn&lt;/td&gt;&lt;td&gt;P3&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;全部路线图&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可直接实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;已有 Roadmap parser/cache&lt;/td&gt;&lt;td&gt;正文仍归仓库；编辑应走 PR&lt;/td&gt;&lt;td&gt;P2&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;PR/Review/CI 聚合&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可直接实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;已有 GitHub client 与 current-head 逻辑&lt;/td&gt;&lt;td&gt;历史状态不得冒充当前状态&lt;/td&gt;&lt;td&gt;P2&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;同步 main、Ready、送审、merge&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可实现需强门禁&lt;/span&gt;&lt;/td&gt;&lt;td&gt;GitHub API + 审核机队列&lt;/td&gt;&lt;td&gt;精确 head、审批、checks、merge-tree&lt;/td&gt;&lt;td&gt;P3&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;环境与部署证据&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;workflow、marker、health、拓扑 runbook&lt;/td&gt;&lt;td&gt;测试、staging、canary、prod 必须分开&lt;/td&gt;&lt;td&gt;P2–P4&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Secret metadata 目录&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可直接实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;Keychain、GitHub secret 名、SSH fingerprint&lt;/td&gt;&lt;td&gt;只显示存在性与元数据&lt;/td&gt;&lt;td&gt;P4&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Secret 受控使用&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;可实现需 Broker&lt;/span&gt;&lt;/td&gt;&lt;td&gt;Keychain/KMS/专用 helper&lt;/td&gt;&lt;td&gt;代执行；Session/UI 不得到值&lt;/td&gt;&lt;td&gt;P4&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;读取全部 secret 明文&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;不应实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;无&lt;/td&gt;&lt;td&gt;GitHub Actions 不回传值；明文交给通用进程即不可保证不外泄&lt;/td&gt;&lt;td&gt;禁止&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;多设备/团队远程控制&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;viz-badge&quot;&gt;后期可实现&lt;/span&gt;&lt;/td&gt;&lt;td&gt;可复用事件/策略模型&lt;/td&gt;&lt;td&gt;需要身份、租户、远程 agent 与审批模型&lt;/td&gt;&lt;td&gt;P5+&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card spb-note text-destructive&quot;&gt;
+      “管理所有密钥读取”建议正式改名为“管理所有 Secret Capability”：可知道它是否存在、谁能用、用于什么动作并审计结果，但不把明文变成产品数据。
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;spb-panel&quot; data-spb-panel-content=&quot;permissions&quot; hidden&gt;
+    &lt;div class=&quot;table-responsive&quot;&gt;
+      &lt;table class=&quot;table table-sm&quot;&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;&lt;th&gt;操作&lt;/th&gt;&lt;th&gt;默认策略&lt;/th&gt;&lt;th&gt;执行前证据&lt;/th&gt;&lt;th&gt;审计要求&lt;/th&gt;&lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;&lt;td&gt;读取缓存、PR、Session、路线图&lt;/td&gt;&lt;td&gt;允许&lt;/td&gt;&lt;td&gt;标记来源和快照时间&lt;/td&gt;&lt;td&gt;只记录刷新结果与错误&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;打开/取消归档 Session&lt;/td&gt;&lt;td&gt;允许明确点击&lt;/td&gt;&lt;td&gt;目标 thread ID&lt;/td&gt;&lt;td&gt;操作者、目标、结果&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;turn/start 或 steer&lt;/td&gt;&lt;td&gt;用户触发&lt;/td&gt;&lt;td&gt;线程状态、项目、PR/current head&lt;/td&gt;&lt;td&gt;输入摘要，不记隐藏推理&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;中断 Session&lt;/td&gt;&lt;td&gt;需要确认&lt;/td&gt;&lt;td&gt;目标任务和当前运行状态&lt;/td&gt;&lt;td&gt;原因、结果、时间&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;同步 main&lt;/td&gt;&lt;td&gt;需要确认&lt;/td&gt;&lt;td&gt;expected head、冲突和工作树状态&lt;/td&gt;&lt;td&gt;旧/新 head 与执行路径&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;Ready / 请求评审 / 送审核机&lt;/td&gt;&lt;td&gt;需要确认或明确点击&lt;/td&gt;&lt;td&gt;current head/base 二次核验&lt;/td&gt;&lt;td&gt;派发者、目标、回执与 stale 状态&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;合并 PR&lt;/td&gt;&lt;td&gt;精确 SHA 强确认&lt;/td&gt;&lt;td&gt;current-head approval、checks、threads、mergeability、main 兼容&lt;/td&gt;&lt;td&gt;merge SHA；部署状态另报&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;测试环境部署&lt;/td&gt;&lt;td&gt;独立确认&lt;/td&gt;&lt;td&gt;main 候选、workflow、确认码、审核范围&lt;/td&gt;&lt;td&gt;run ID、marker、环境验收&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;生产部署 / migration&lt;/td&gt;&lt;td&gt;高危独立授权&lt;/td&gt;&lt;td&gt;delta、备份、维护窗口、回退、生产 runbook&lt;/td&gt;&lt;td&gt;完整证据链和最终验收&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;查看 secret metadata&lt;/td&gt;&lt;td&gt;按项目授权&lt;/td&gt;&lt;td&gt;资源 scope&lt;/td&gt;&lt;td&gt;访问者与字段范围&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;使用 secret 执行动作&lt;/td&gt;&lt;td&gt;action-scoped 授权&lt;/td&gt;&lt;td&gt;project + env + action + actor + target&lt;/td&gt;&lt;td&gt;先审计后使用，只记录结果与 fingerprint&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;查看 secret 明文&lt;/td&gt;&lt;td&gt;默认永久禁止&lt;/td&gt;&lt;td&gt;不提供常规入口&lt;/td&gt;&lt;td&gt;任何绕过尝试作为安全事件&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;script&gt;
+    (() =&gt; {
+      const root = document.getElementById(&#x27;spc-blueprint-v1&#x27;);
+      if (!root) return;
+
+      const panelButtons = Array.from(root.querySelectorAll(&#x27;[data-spb-panel]&#x27;));
+      const panels = Array.from(root.querySelectorAll(&#x27;[data-spb-panel-content]&#x27;));
+      panelButtons.forEach((button) =&gt; {
+        button.addEventListener(&#x27;click&#x27;, () =&gt; {
+          const target = button.getAttribute(&#x27;data-spb-panel&#x27;);
+          panelButtons.forEach((candidate) =&gt; {
+            const active = candidate === button;
+            candidate.setAttribute(&#x27;aria-pressed&#x27;, String(active));
+            candidate.classList.toggle(&#x27;btn-primary&#x27;, active);
+          });
+          panels.forEach((panel) =&gt; {
+            panel.hidden = panel.getAttribute(&#x27;data-spb-panel-content&#x27;) !== target;
+          });
+        });
+      });
+
+      const requirementBoxes = Array.from(root.querySelectorAll(&#x27;[data-spb-requirement]&#x27;));
+      const confirmed = root.querySelector(&#x27;[data-spb-confirmed]&#x27;);
+      const progress = root.querySelector(&#x27;[data-spb-progress]&#x27;);
+      const updateRequirements = () =&gt; {
+        const value = requirementBoxes.filter((box) =&gt; box.checked).length;
+        if (confirmed) confirmed.textContent = String(value);
+        if (progress) progress.value = value;
+      };
+      requirementBoxes.forEach((box) =&gt; box.addEventListener(&#x27;change&#x27;, updateRequirements));
+
+      const nodeData = {
+        github: [&#x27;GitHub Adapter&#x27;, &#x27;读取 PR、Review、Checks、workflow 与 mergeability；所有可写动作绑定 expected head。&#x27;, &#x27;GitHub API 的 current head 实时结果&#x27;, &#x27;Ready、review、update-branch、merge&#x27;, &#x27;current-head、allowlist、checks、merge-tree&#x27;, &#x27;P2–P3&#x27;],
+        codex: [&#x27;Codex App Server Adapter&#x27;, &#x27;通过官方 App Server 长连接管理 thread、turn、状态与事件，不使用剪贴板或模拟点击。&#x27;, &#x27;Codex App Server&#x27;, &#x27;resume、steer、interrupt、archive&#x27;, &#x27;线程状态与并发 turn 规则&#x27;, &#x27;P2–P3&#x27;],
+        repos: [&#x27;Repository &amp; Roadmap Adapter&#x27;, &#x27;读取本地 checkout 和仓库路线图，将正文、阶段、PR 与 Session 绑定规范化。&#x27;, &#x27;版本库中的 roadmap/manifest&#x27;, &#x27;路线图正文修改只通过分支与 PR&#x27;, &#x27;路径范围、仓库身份与干净工作树&#x27;, &#x27;P2&#x27;],
+        review: [&#x27;Review Machine Adapter&#x27;, &#x27;保留现有队列、签名审计和 current-head/base stale 机制。&#x27;, &#x27;远端 worker 回执 + GitHub Review&#x27;, &#x27;enqueue 与只读监控&#x27;, &#x27;head/base 二次核验、签名与日志哈希&#x27;, &#x27;P2–P3&#x27;],
+        environment: [&#x27;Environment Evidence Adapter&#x27;, &#x27;聚合 workflow、marker、current symlink、health、版本与浏览器验收证据。&#x27;, &#x27;环境 runbook + live marker/health&#x27;, &#x27;测试部署与生产 promote 分离&#x27;, &#x27;环境、确认码、release digest&#x27;, &#x27;P2–P4&#x27;],
+        secrets: [&#x27;Secret Provider Adapters&#x27;, &#x27;接入 Keychain、GitHub Actions secret metadata、SSH fingerprint 与未来 KMS。&#x27;, &#x27;各 provider 自身&#x27;, &#x27;不提供通用明文读取 API&#x27;, &#x27;项目、环境、动作与主体 scope&#x27;, &#x27;P4&#x27;],
+        registry: [&#x27;Project Registry&#x27;, &#x27;统一声明项目、仓库、本地 checkout、默认分支、环境、路线图、Session 查询范围与权限策略。&#x27;, &#x27;版本化 registry + 实时适配器&#x27;, &#x27;配置变更必须审计&#x27;, &#x27;schema 校验与项目作用域&#x27;, &#x27;P1&#x27;],
+        normalizer: [&#x27;State Normalizer&#x27;, &#x27;把不同来源归一为 actual state，并为每条状态附 source、observedAt 与 freshness。&#x27;, &#x27;适配器事件&#x27;, &#x27;只更新物化视图，不伪造未知值&#x27;, &#x27;live/cached/fetching/unreachable/unknown&#x27;, &#x27;P1&#x27;],
+        policy: [&#x27;Policy Engine&#x27;, &#x27;把读取、Session 控制、PR、部署和 secret-use 的权限矩阵编码成可测试策略。&#x27;, &#x27;版本化 policy + 当前事实&#x27;, &#x27;返回 allow/confirm/deny 与原因&#x27;, &#x27;默认 fail-closed，高危独立授权&#x27;, &#x27;P1–P4&#x27;],
+        commands: [&#x27;Command Orchestrator&#x27;, &#x27;所有动作统一走 Prepare → Refresh → Authorize → Execute → Verify → Audit。&#x27;, &#x27;命令请求 + current facts&#x27;, &#x27;幂等命令与 expected state&#x27;, &#x27;超时、竞态、stale 和重放保护&#x27;, &#x27;P3–P4&#x27;],
+        audit: [&#x27;Event &amp; Audit Store&#x27;, &#x27;SQLite 保存规范化事件、动作意图、结果、证据引用、outbox 与可重建视图。&#x27;, &#x27;append-only event log&#x27;, &#x27;不存密钥值和隐藏推理&#x27;, &#x27;幂等键、保留期、可追溯来源&#x27;, &#x27;P1&#x27;],
+        broker: [&#x27;Secret Capability Broker&#x27;, &#x27;在调用瞬间从 provider 取用或代执行，Session/UI 只得到动作结果。&#x27;, &#x27;Keychain/KMS/helper&#x27;, &#x27;按 capability 调用，不返回 plaintext&#x27;, &#x27;audit-before-use、短生命周期、最小权限&#x27;, &#x27;P4&#x27;],
+        menubar: [&#x27;菜单栏快速入口&#x27;, &#x27;保留现有 PR 总览、告警、审核机和快捷跳转，作为低干扰状态面板。&#x27;, &#x27;Control Daemon 的只读 projection&#x27;, &#x27;只暴露少量安全快捷动作&#x27;, &#x27;动作仍走统一 Policy Engine&#x27;, &#x27;P2&#x27;],
+        desktop: [&#x27;桌面端主窗口&#x27;, &#x27;提供项目导航、Session、路线图、PR、环境、Secret Capability 与审计工作台。&#x27;, &#x27;Control Daemon 的统一模型&#x27;, &#x27;不直接调用外部系统&#x27;, &#x27;所有动作只提交 typed command&#x27;, &#x27;P2–P4&#x27;],
+        notifications: [&#x27;通知与审批入口&#x27;, &#x27;将重要状态推送到系统通知、Bark 或 DeptChat，并回链到精确对象。&#x27;, &#x27;Audit/outbox 事件&#x27;, &#x27;通知不能成为部署或 merge 授权&#x27;, &#x27;脱敏、去重、优先级与确认回执&#x27;, &#x27;P4–P5&#x27;]
+      };
+      const nodeFields = {
+        title: root.querySelector(&#x27;[data-spb-node-title]&#x27;),
+        summary: root.querySelector(&#x27;[data-spb-node-summary]&#x27;),
+        source: root.querySelector(&#x27;[data-spb-node-source]&#x27;),
+        write: root.querySelector(&#x27;[data-spb-node-write]&#x27;),
+        gate: root.querySelector(&#x27;[data-spb-node-gate]&#x27;),
+        phase: root.querySelector(&#x27;[data-spb-node-phase]&#x27;)
+      };
+      const nodeButtons = Array.from(root.querySelectorAll(&#x27;[data-spb-node]&#x27;));
+      nodeButtons.forEach((button) =&gt; {
+        button.addEventListener(&#x27;click&#x27;, () =&gt; {
+          const key = button.getAttribute(&#x27;data-spb-node&#x27;);
+          const data = key ? nodeData[key] : null;
+          if (!data) return;
+          nodeButtons.forEach((candidate) =&gt; candidate.classList.toggle(&#x27;is-selected&#x27;, candidate === button));
+          nodeFields.title.textContent = data[0];
+          nodeFields.summary.textContent = data[1];
+          nodeFields.source.textContent = data[2];
+          nodeFields.write.textContent = data[3];
+          nodeFields.gate.textContent = data[4];
+          nodeFields.phase.textContent = data[5];
+        });
+      });
+
+      const phaseData = {
+        P0: {
+          window: &#x27;建议窗口：1 周&#x27;,
+          title: &#x27;无损建立可重建基线&#x27;,
+          outcome: &#x27;把当前已运行但未提交的实现，变成可从干净 checkout 重建、测试、安装和复核的版本事实源。&#x27;,
+          deliverables: [&#x27;恢复分支与原子基线提交&#x27;, &#x27;从 origin/main 建立干净集成线&#x27;, &#x27;源码、Harness、安装包和功能证据清单&#x27;],
+          gates: [&#x27;干净 checkout 可构建&#x27;, &#x27;12 项 Harness、渲染与安装版验收通过&#x27;, &#x27;现有能力无回退且无密钥进入 Git&#x27;],
+          prerequisites: &#x27;冻结当前工作树；禁止 rebase、reset、clean、覆盖式同步和安装包替换。&#x27;,
+          architecture: &#x27;只解决版本事实、可重建性和非线性分支，不改变产品行为。&#x27;,
+          permission: &#x27;只读盘点可直接做；本地提交、推送、PR、安装替换分别需要授权。&#x27;,
+          rollback: &#x27;原分支、原安装包、binary patch、未跟踪文件清单和 SHA-256 全保留；任一步不一致立即停止。&#x27;,
+          tasks: [
+            { id:&#x27;P0.1&#x27;, title:&#x27;冻结并盘点当前事实&#x27;, why:&#x27;先确认当前运行版到底由哪些源码、未跟踪文件、缓存、安装包和远端依赖组成，避免后续保全遗漏。&#x27;, actions:[&#x27;记录 branch、HEAD、origin/main、ahead/behind、status 和完整 diff 统计。&#x27;,&#x27;列出未跟踪文件、Harness、安装包路径、运行进程、签名和 SHA-256。&#x27;,&#x27;把现有功能按 PR、Session、路线图、审核机、缓存、通知拆成验收清单。&#x27;], files:&#x27;整个仓库只读；重点 native/、tests/、review-worker/、build/harness/。&#x27;, output:&#x27;版本事实清单、功能清单、文件清单、安装产物清单。&#x27;, evidence:&#x27;清单中的 SHA、文件数、diff 统计与 handoff 逐项一致。&#x27;, permission:&#x27;只读。&#x27;, failure:&#x27;只记录 Git commit，遗漏未提交源码或把 Harness 缓存当源码。&#x27;, rollback:&#x27;不修改任何状态；发现不一致时停止并补清单。&#x27;, depends:&#x27;无&#x27; },
+            { id:&#x27;P0.2&#x27;, title:&#x27;做凭据与敏感内容扫描&#x27;, why:&#x27;工作树包含 SSH、Bark、GitHub 和审核机相关代码，保全前必须证明提交内容不含真实凭据。&#x27;, actions:[&#x27;扫描 tracked 与 untracked 文件中的 token、私钥、密码、cookie、.env 和主机个人信息模式。&#x27;,&#x27;人工复核命中项，区分测试 fixture、fingerprint、公开 key 与真实 secret。&#x27;,&#x27;建立允许进入 Git 的 metadata 字段清单和必须排除的路径清单。&#x27;], files:&#x27;README、native/、review-worker/、tests/、本地配置引用。&#x27;, output:&#x27;敏感内容扫描报告与排除清单。&#x27;, evidence:&#x27;真实凭据命中为零；测试样例均有明确 fixture 标记。&#x27;, permission:&#x27;只读；不得打印或复制 secret 值。&#x27;, failure:&#x27;把公钥 fingerprint 当 secret，或把测试 token 当真实 token造成误判；反之漏掉 untracked 配置。&#x27;, rollback:&#x27;不提交；删除任何临时扫描输出中的敏感片段。&#x27;, depends:&#x27;P0.1&#x27; },
+            { id:&#x27;P0.3&#x27;, title:&#x27;建立双重恢复载体&#x27;, why:&#x27;单一 Git commit 无法覆盖误操作、对象损坏或尚未完成的 untracked 文件，需 Git 与离线证据双保险。&#x27;, actions:[&#x27;生成 tracked binary diff、untracked 文件 manifest 和内容哈希。&#x27;,&#x27;保存已安装 App、Harness summary、预览图、签名和二进制哈希。&#x27;,&#x27;创建恢复说明，写清如何从 commit、patch 或安装包回到当前状态。&#x27;], files:&#x27;恢复目录不放入产品仓库；清单只记录路径、哈希和用途。&#x27;, output:&#x27;恢复包、哈希清单、恢复步骤。&#x27;, evidence:&#x27;在临时目录演练 patch 可解析、manifest 可核对、安装包签名有效。&#x27;, permission:&#x27;本地文件写入；不推送。&#x27;, failure:&#x27;恢复包只含 diff 不含 untracked，或归档进了缓存/secret。&#x27;, rollback:&#x27;删除失败恢复包，原工作树保持不动后重新生成。&#x27;, depends:&#x27;P0.2&#x27; },
+            { id:&#x27;P0.4&#x27;, title:&#x27;形成当前运行版原子基线&#x27;, why:&#x27;必须有一个精确版本指针代表“当前安装版对应的源状态”，才能退出脏工作树唯一事实源。&#x27;, actions:[&#x27;在独立恢复分支承载当前所有确认属于运行版的源码。&#x27;,&#x27;使用显式文件列表暂存，禁止 git add -A。&#x27;,&#x27;提交信息记录 handoff SHA、安装包 SHA、Harness 结果和已知非线性关系。&#x27;], files:&#x27;17 个已跟踪修改文件及确认纳入的 RoadmapClient/测试/handoff。&#x27;, output:&#x27;单一恢复基线 commit 与可审计提交清单。&#x27;, evidence:&#x27;commit tree 与工作树目标文件逐字节一致；未纳入项有理由。&#x27;, permission:&#x27;需要本地 commit 授权；不推送。&#x27;, failure:&#x27;把临时文件、缓存或不属于安装版的试验功能混入基线。&#x27;, rollback:&#x27;保留恢复分支指针；可 reset 回 commit 前但不得删除恢复包。&#x27;, depends:&#x27;P0.3&#x27; },
+            { id:&#x27;P0.5&#x27;, title:&#x27;从 origin/main 重建干净集成线&#x27;, why:&#x27;当前分支 5 ahead/1 behind 且 PR #2 squash 后非线性，直接 rebase 会把重复改动和遗漏 imports 混在一起。&#x27;, actions:[&#x27;从已刷新 origin/main 创建全新集成分支。&#x27;,&#x27;按功能簇重放恢复基线：基础模型→GitHub→Session→路线图→审核机→UI→测试。&#x27;,&#x27;逐簇解决与 squash merge 的语义重叠，并运行 diff/check。&#x27;], files:&#x27;集成分支；不触碰原恢复分支和原安装包。&#x27;, output:&#x27;线性、可 review 的集成分支和冲突决策记录。&#x27;, evidence:&#x27;merge-base 正确；diff 中无重复实现、丢失 import 或无关格式化。&#x27;, permission:&#x27;本地分支与 commit；fetch 可读网络；不推送。&#x27;, failure:&#x27;一次性 squash 全部改动，导致 import、资源或测试静默丢失。&#x27;, rollback:&#x27;丢弃集成分支并从恢复基线重新分簇重放。&#x27;, depends:&#x27;P0.4&#x27; },
+            { id:&#x27;P0.6&#x27;, title:&#x27;做可重建与行为等价验证&#x27;, why:&#x27;编译成功不代表与当前安装版功能等价，必须把源码、测试、渲染和实际安装行为连成证据链。&#x27;, actions:[&#x27;从干净 checkout 执行 build-native.sh 与 test-native.sh。&#x27;,&#x27;对比 dashboard/pr-detail 渲染、App bundle 资源、签名和功能清单。&#x27;,&#x27;在候选安装路径运行，不覆盖正式安装版，观察 CPU、内存、刷新和 Session 状态。&#x27;], files:&#x27;build scripts、Harness、候选 App bundle。&#x27;, output:&#x27;重建报告、测试日志、渲染对比、运行时采样。&#x27;, evidence:&#x27;12 项 Harness 通过；关键 UI/交互等价；候选无空闲高能耗回归。&#x27;, permission:&#x27;本地构建和候选运行；正式安装替换另授权。&#x27;, failure:&#x27;只报告编译绿，未检查未提交功能、资源、签名或正式行为。&#x27;, rollback:&#x27;关闭候选 App，保留正式安装版继续运行。&#x27;, depends:&#x27;P0.5&#x27; },
+            { id:&#x27;P0.7&#x27;, title:&#x27;验收并退休脏工作树唯一事实源&#x27;, why:&#x27;只有在干净版本可重建、可测试、可安装后，才能安全进入架构升级。&#x27;, actions:[&#x27;逐项签收功能清单和已知限制。&#x27;,&#x27;确定基线分支/commit 为后续工作的唯一代码入口。&#x27;,&#x27;若授权则推送恢复/集成分支并创建 PR；仍不合并、不部署。&#x27;], files:&#x27;验收报告、分支指针、handoff 更新。&#x27;, output:&#x27;P0 验收结论和后续基线 SHA。&#x27;, evidence:&#x27;任何新工作区仅凭仓库和说明即可重建同等软件。&#x27;, permission:&#x27;推送/PR 需明确授权；merge/deploy 不包含在内。&#x27;, failure:&#x27;还依赖旧工作树或本机缓存才能复现某项能力。&#x27;, rollback:&#x27;继续把旧工作树保持只读，不进入 P1。&#x27;, depends:&#x27;P0.6&#x27; }
+          ]
+        },
+        P1: {
+          window: &#x27;建议窗口：2–3 周&#x27;,
+          title: &#x27;控制平面内核与模块化&#x27;,
+          outcome: &#x27;在不改变用户行为的前提下，把状态、策略、存储、适配器和 UI 编排拆成可测试边界。&#x27;,
+          deliverables: [&#x27;ProjectControlDomain / Adapters / Store / Policy&#x27;, &#x27;本地 Control Daemon 最小骨架&#x27;, &#x27;菜单栏改从统一 projection 读取&#x27;],
+          gates: [&#x27;旧功能回归通过&#x27;, &#x27;状态都带 source/observedAt/freshness&#x27;, &#x27;Policy 覆盖 allow/confirm/deny 且 UI 不直连外部写接口&#x27;],
+          prerequisites: &#x27;P0 基线已经合格；现有用户行为、刷新周期和缓存语义已有回归测试。&#x27;,
+          architecture: &#x27;从单一 swiftc 全量编译迁到 Swift Package 模块；AppDelegate 不再充当全部服务的编排器。&#x27;,
+          permission: &#x27;仅本地重构和测试；不打开新写操作，不改变 GitHub、审核机或生产环境。&#x27;,
+          rollback: &#x27;每个模块迁移保持兼容 facade，可逐模块回切旧实现。&#x27;,
+          tasks: [
+            { id:&#x27;P1.1&#x27;, title:&#x27;定义领域模型与事件词汇&#x27;, why:&#x27;没有统一词汇时，PR、Session、环境和缓存会继续用各自状态枚举，无法做全局策略和审计。&#x27;, actions:[&#x27;定义 Project、ResourceRef、ObservedFact、Freshness、CommandIntent、PolicyDecision、AuditEvent。&#x27;,&#x27;规定 live/cached/fetching/unreachable/unknown 的转换与展示语义。&#x27;,&#x27;区分用户声明、系统观察、已验证事实和推断。&#x27;], files:&#x27;新 ProjectControlDomain；从 native/Models.swift 迁移。&#x27;, output:&#x27;版本化 schema、状态机和序列化测试。&#x27;, evidence:&#x27;同一状态在菜单栏、主窗口和审计中含义一致。&#x27;, permission:&#x27;本地代码。&#x27;, failure:&#x27;把 UI 文案当领域状态，或把缓存命中当 live 事实。&#x27;, rollback:&#x27;保留旧 Models facade，逐模型迁移。&#x27;, depends:&#x27;P0.7&#x27; },
+            { id:&#x27;P1.2&#x27;, title:&#x27;建立 Swift Package 模块边界&#x27;, why:&#x27;当前测试重复编译全部源文件，任何功能都会耦合 AppKit、网络和存储。&#x27;, actions:[&#x27;建立 Domain、Adapters、Store、Policy、AppUI targets。&#x27;,&#x27;把纯模型/解析器先迁出 AppKit。&#x27;,&#x27;为每个 target 建独立测试和依赖方向约束。&#x27;], files:&#x27;Package.swift、Sources/、Tests/；兼容 build-native.sh。&#x27;, output:&#x27;可独立构建的模块图与 CI/Harness 接线。&#x27;, evidence:&#x27;Domain 不依赖 AppKit/Process；Adapters 不依赖具体 ViewController。&#x27;, permission:&#x27;本地重构。&#x27;, failure:&#x27;只是移动文件，依赖仍双向或通过全局单例绕回。&#x27;, rollback:&#x27;保留原 swiftc 清单作为临时兼容构建。&#x27;, depends:&#x27;P1.1&#x27; },
+            { id:&#x27;P1.3&#x27;, title:&#x27;建立 Project Registry&#x27;, why:&#x27;项目仓库、checkout、环境、路线图和 workflow 现在散落在代码常量与 UI，无法安全扩展。&#x27;, actions:[&#x27;定义 registry schema 与版本。&#x27;,&#x27;迁移 OPCB、PR CONTROL、OPCB FDE 三个现有项目。&#x27;,&#x27;校验 repository、localPath、defaultBranch、roadmapSources、environmentRefs、capabilities。&#x27;], files:&#x27;ProjectControlDomain/Registry、默认 registry 资源。&#x27;, output:&#x27;可验证的项目注册表和迁移工具。&#x27;, evidence:&#x27;新增项目不改 DashboardViewController 或 GitHubClient。&#x27;, permission:&#x27;本地配置；修改 registry 要审计。&#x27;, failure:&#x27;registry 保存 token、SSH 私钥路径正文或项目专属业务逻辑。&#x27;, rollback:&#x27;回退到内置 catalog facade。&#x27;, depends:&#x27;P1.2&#x27; },
+            { id:&#x27;P1.4&#x27;, title:&#x27;建立状态归一化与刷新调度&#x27;, why:&#x27;不同计时器和客户端各自写 UI，容易出现旧数据覆盖新数据或部分成功冒充整体成功。&#x27;, actions:[&#x27;为每个 adapter 定义 snapshot envelope。&#x27;,&#x27;统一 observedAt、expiresAt、source、error、generation。&#x27;,&#x27;实现按资源去重、stale 抑制和成功后替换缓存。&#x27;], files:&#x27;StateNormalizer、RefreshCoordinator。&#x27;, output:&#x27;统一 projection 与竞态测试。&#x27;, evidence:&#x27;晚到旧响应不能覆盖新 generation；部分失败保留逐项 unknown。&#x27;, permission:&#x27;只读数据面。&#x27;, failure:&#x27;一个 API 成功就把整个项目标绿，或后台失败清空旧快照。&#x27;, rollback:&#x27;按 adapter 回退旧缓存读取。&#x27;, depends:&#x27;P1.1,P1.3&#x27; },
+            { id:&#x27;P1.5&#x27;, title:&#x27;建立 SQLite 事件账本与物化视图&#x27;, why:&#x27;只有 JSON 快照无法回答“为什么变成这样”、不能可靠恢复动作和审计。&#x27;, actions:[&#x27;设计 append-only events、command_attempts、evidence_refs、outbox。&#x27;,&#x27;建立 projection rebuild 与 schema migration。&#x27;,&#x27;定义保留期、压缩和敏感字段 redaction。&#x27;], files:&#x27;ProjectControlStore；独立 SQLite 文件。&#x27;, output:&#x27;可重放事件库、迁移、备份和恢复测试。&#x27;, evidence:&#x27;删除物化表后可从事件重建；审计不含 secret 或隐藏推理。&#x27;, permission:&#x27;本地数据库写入。&#x27;, failure:&#x27;把整个 raw transcript、环境变量或 secret 值写入 event。&#x27;, rollback:&#x27;数据库版本化备份；迁移失败保持旧库只读。&#x27;, depends:&#x27;P1.1,P1.4&#x27; },
+            { id:&#x27;P1.6&#x27;, title:&#x27;实现 Policy Engine&#x27;, why:&#x27;如果权限只写在按钮 enabled 状态里，CLI、通知或未来远程入口会绕过安全边界。&#x27;, actions:[&#x27;把权限矩阵编码为纯函数策略。&#x27;,&#x27;输入 actor、project、environment、action、current facts 和 requested target。&#x27;,&#x27;输出 allow、confirm、deny、requiredEvidence 和 reason。&#x27;], files:&#x27;ProjectControlPolicy。&#x27;, output:&#x27;策略表、单元测试、反例用例。&#x27;, evidence:&#x27;merge、prod deploy、secret-use 缺任一证据均 fail-closed。&#x27;, permission:&#x27;无外部写入。&#x27;, failure:&#x27;UI 是否显示按钮被误当成授权，或 unknown 被当 allow。&#x27;, rollback:&#x27;高风险 action 全部 deny。&#x27;, depends:&#x27;P1.1,P1.5&#x27; },
+            { id:&#x27;P1.7&#x27;, title:&#x27;建立本地 Control Daemon 与 UI facade&#x27;, why:&#x27;主窗口和菜单栏需要共享同一事实与刷新生命周期，不能各自重复连接 GitHub、App Server 和 SSH。&#x27;, actions:[&#x27;定义 daemon 生命周期、IPC/XPC 或本地进程内过渡接口。&#x27;,&#x27;把 adapters、store、policy 的所有权移到 daemon/core。&#x27;,&#x27;AppDelegate 只订阅 projection、转发 typed intent。&#x27;], files:&#x27;ProjectControlDaemon、AppFacade、AppDelegate 迁移。&#x27;, output:&#x27;单一后台状态源与兼容 UI 接口。&#x27;, evidence:&#x27;关闭 popover 不丢状态；打开主窗口不会重复启动轮询。&#x27;, permission:&#x27;本机进程；无新外部写能力。&#x27;, failure:&#x27;daemon 与 App 各保留一套 timer/cache，制造双事实源。&#x27;, rollback:&#x27;进程内 facade 兼容模式。&#x27;, depends:&#x27;P1.2,P1.4,P1.5,P1.6&#x27; },
+            { id:&#x27;P1.8&#x27;, title:&#x27;把现有菜单栏无行为迁移到新内核&#x27;, why:&#x27;先证明架构替换不影响现有用户，再开发桌面主窗口。&#x27;, actions:[&#x27;逐项迁移 GitHub、Session、Roadmap、审核机和缓存读取。&#x27;,&#x27;保持刷新周期、视觉、快捷键和错误文案。&#x27;,&#x27;运行旧测试、能耗采样和安装候选对比。&#x27;], files:&#x27;AppDelegate、DashboardViewController 与 facade。&#x27;, output:&#x27;基于新内核的菜单栏候选版。&#x27;, evidence:&#x27;现有功能清单零回退；空闲能耗不高于基线。&#x27;, permission:&#x27;候选构建；正式安装替换另授权。&#x27;, failure:&#x27;架构迁移顺便改 UI/行为，导致无法定位回归来源。&#x27;, rollback:&#x27;切换 feature flag 回旧 facade。&#x27;, depends:&#x27;P1.7&#x27; }
+          ]
+        },
+        P2: {
+          window: &#x27;建议窗口：3–4 周&#x27;,
+          title: &#x27;只读桌面端 V1&#x27;,
+          outcome: &#x27;交付完整主窗口，统一查看项目、全部 Session、路线图、PR、审核机、环境与审计，但不新增破坏性写能力。&#x27;,
+          deliverables: [&#x27;原生主窗口与全局导航&#x27;, &#x27;App Server 长连接只读状态&#x27;, &#x27;统一 Audit Timeline、缓存降级和环境证据&#x27;],
+          gates: [&#x27;真实 Session list/read/status 证据&#x27;, &#x27;GitHub current-head 与缓存降级测试&#x27;, &#x27;菜单栏、主窗口与审计状态一致&#x27;],
+          prerequisites: &#x27;P1 内核稳定；Project Registry、State Normalizer 和 Store 已可用。&#x27;,
+          architecture: &#x27;新增桌面表现层，不允许 ViewController 直接执行 gh、ssh、Process 或读取 Codex SQLite。&#x27;,
+          permission: &#x27;只读和打开资源；不 merge、不 deploy、不读取 secret 值。&#x27;,
+          rollback: &#x27;主窗口可独立关闭或 feature flag 隐藏，菜单栏继续提供原能力。&#x27;,
+          tasks: [
+            { id:&#x27;P2.1&#x27;, title:&#x27;设计桌面信息架构与窗口骨架&#x27;, why:&#x27;先确定项目、Session、路线图、PR、环境和审计之间的导航关系，避免把菜单栏内容简单放大。&#x27;, actions:[&#x27;定义侧栏项目树、全局状态栏、主内容区和详情检查器。&#x27;,&#x27;确定菜单栏与主窗口的职责分工。&#x27;,&#x27;定义空状态、加载、缓存、不可达和无权限状态。&#x27;], files:&#x27;DesktopWindowController、导航模型、设计快照。&#x27;, output:&#x27;可交互窗口骨架和页面契约。&#x27;, evidence:&#x27;470px 菜单栏与桌面窗口不重复堆叠；320px 辅助尺寸可访问。&#x27;, permission:&#x27;本地 UI。&#x27;, failure:&#x27;做成大号菜单栏或用卡片堆满所有信息。&#x27;, rollback:&#x27;不影响菜单栏。&#x27;, depends:&#x27;P1.8&#x27; },
+            { id:&#x27;P2.2&#x27;, title:&#x27;交付项目总览与 Registry 管理视图&#x27;, why:&#x27;所有 Session、PR 和环境都必须先有明确项目归属。&#x27;, actions:[&#x27;展示项目身份、仓库、checkout、默认分支、环境与能力。&#x27;,&#x27;提供 registry 校验结果和只读编辑预览。&#x27;,&#x27;显示来源、更新时间和缺失配置。&#x27;], files:&#x27;ProjectOverview、RegistryProjection。&#x27;, output:&#x27;项目总览页。&#x27;, evidence:&#x27;三个现有项目正确映射；未配置能力显示 unknown/unsupported。&#x27;, permission:&#x27;只读；保存 registry 变更留待确认。&#x27;, failure:&#x27;自定义项目被硬编码 workflow 或环境逻辑。&#x27;, rollback:&#x27;回退只读 catalog。&#x27;, depends:&#x27;P2.1&#x27; },
+            { id:&#x27;P2.3&#x27;, title:&#x27;接入全部 Codex Session 只读视图&#x27;, why:&#x27;现有 Resolver 主要围绕 PR 反查，桌面端需要从 thread 全量视角出发。&#x27;, actions:[&#x27;用官方 App Server thread/list、thread/read 和状态事件建立长连接。&#x27;,&#x27;统一 active、archived、running、waiting、idle。&#x27;,&#x27;按项目、PR、仓库、分支和状态过滤，并展示绑定置信来源。&#x27;], files:&#x27;CodexAdapter、SessionProjection、SessionList/Detail。&#x27;, output:&#x27;全部 Session 列表、详情与实时状态。&#x27;, evidence:&#x27;真实 active/archived 数据与 Codex App 一致；断线后可恢复游标。&#x27;, permission:&#x27;只读；打开/取消归档按既有安全边界。&#x27;, failure:&#x27;继续从本地 JSONL 猜全部实时状态，或多候选时误绑定。&#x27;, rollback:&#x27;保留 Resolver 作为历史回退。&#x27;, depends:&#x27;P2.1,P1.7&#x27; },
+            { id:&#x27;P2.4&#x27;, title:&#x27;升级路线图为 Registry 与依赖视图&#x27;, why:&#x27;仅按文件名发现无法表达负责人、依赖、里程碑和跨项目关联。&#x27;, actions:[&#x27;兼容现有 parser/cache。&#x27;,&#x27;增加显式 roadmap manifest、owner、stage、dependencies、PR/Session refs。&#x27;,&#x27;正文点击仍打开仓库源文件，编辑入口生成分支/PR 计划。&#x27;], files:&#x27;RoadmapAdapter、manifest schema、RoadmapView。&#x27;, output:&#x27;跨文档路线图和依赖关系视图。&#x27;, evidence:&#x27;隐藏不删除；源文件变化可增量刷新；循环依赖被标出。&#x27;, permission:&#x27;只读；正文编辑不在本阶段执行。&#x27;, failure:&#x27;在 App 数据库维护第二份路线图正文。&#x27;, rollback:&#x27;退回现有自动发现 parser。&#x27;, depends:&#x27;P2.2&#x27; },
+            { id:&#x27;P2.5&#x27;, title:&#x27;统一 PR、Review、CI 与部署证据&#x27;, why:&#x27;PR 是否可合并不能由单一绿色 check 或历史 approval 推断。&#x27;, actions:[&#x27;按 current head 归一 Review、checks、threads、mergeability。&#x27;,&#x27;逐 workflow 显示成功、失败、进行中、unknown。&#x27;,&#x27;把 GitHub merge、测试部署、生产部署分成独立状态。&#x27;], files:&#x27;GitHubAdapter、PRProjection、PRList/Detail。&#x27;, output:&#x27;PR 控制面只读页。&#x27;, evidence:&#x27;旧 head approval、历史同名红灯和部分查询失败用例均正确。&#x27;, permission:&#x27;只读。&#x27;, failure:&#x27;绿 CI 被展示为已批准/已部署，或历史 review 污染 current head。&#x27;, rollback:&#x27;保留现有 DashboardSnapshot 作为兼容输入。&#x27;, depends:&#x27;P1.4,P2.1&#x27; },
+            { id:&#x27;P2.6&#x27;, title:&#x27;接入审核机与环境证据&#x27;, why:&#x27;审核机状态和环境状态都必须从项目 UI 中解耦，并能追溯证据。&#x27;, actions:[&#x27;复用签名、日志哈希、head/base stale 验证。&#x27;,&#x27;为 test、staging、canary、prod 建独立 EnvironmentProjection。&#x27;,&#x27;显示 workflow run、marker、version、health、browser acceptance 缺口。&#x27;], files:&#x27;ReviewAdapter、EnvironmentAdapter、EnvironmentView。&#x27;, output:&#x27;审核机页与环境拓扑页。&#x27;, evidence:&#x27;unsigned completed 不显示已审核；staging 与 prod 不混报。&#x27;, permission:&#x27;只读探针。&#x27;, failure:&#x27;把 SSH 可达当服务健康，或把 workflow 绿色当 live。&#x27;, rollback:&#x27;显示 cached/unreachable，不猜结果。&#x27;, depends:&#x27;P2.2,P2.5&#x27; },
+            { id:&#x27;P2.7&#x27;, title:&#x27;建立统一 Audit Timeline&#x27;, why:&#x27;用户需要知道状态如何变化、谁做了什么以及证据在哪里。&#x27;, actions:[&#x27;按项目/资源聚合事实事件、命令意图、确认和结果。&#x27;,&#x27;每条记录显示 actor、source、observedAt、correlation ID、evidence ref。&#x27;,&#x27;对 secret、prompt、路径和日志做脱敏。&#x27;], files:&#x27;AuditProjection、TimelineView。&#x27;, output:&#x27;可筛选审计时间线。&#x27;, evidence:&#x27;从 PR→Session→Review→merge→deploy 可追踪；无隐藏推理和 secret。&#x27;, permission:&#x27;只读。&#x27;, failure:&#x27;把 raw JSONL 或完整命令当审计展示。&#x27;, rollback:&#x27;隐藏敏感事件类型，保留底层 redacted 记录。&#x27;, depends:&#x27;P1.5,P2.3,P2.5,P2.6&#x27; },
+            { id:&#x27;P2.8&#x27;, title:&#x27;完成缓存、断线和安装版验收&#x27;, why:&#x27;桌面端长时间运行，必须在网络波动、App Server 重启和 GitHub 限流下保持真实而不误报。&#x27;, actions:[&#x27;模拟每个 adapter 超时、部分失败、stale 和重连。&#x27;,&#x27;验证缓存只在成功后替换并显示年龄。&#x27;,&#x27;对候选安装版做长时间 CPU/内存、焦点、键盘和窗口恢复测试。&#x27;], files:&#x27;Adapter tests、Store tests、Desktop Harness。&#x27;, output:&#x27;断线矩阵、能耗报告、安装版验收。&#x27;, evidence:&#x27;无 false-green；菜单栏关闭/主窗口打开不重复轮询。&#x27;, permission:&#x27;本地与只读网络。&#x27;, failure:&#x27;失败时清空旧数据或把 stale 继续标 live。&#x27;, rollback:&#x27;禁用新 adapter，展示明确 degraded。&#x27;, depends:&#x27;P2.1-P2.7&#x27; }
+          ]
+        },
+        P3: {
+          window: &#x27;建议窗口：3–4 周&#x27;,
+          title: &#x27;Session 与 PR 受控动作&#x27;,
+          outcome: &#x27;逐项开放 resume、steer、interrupt、Ready、请求评审、送审核机、同步 main 与 merge，并形成统一命令证据链。&#x27;,
+          deliverables: [&#x27;Typed Command 管线&#x27;, &#x27;精确确认与 expected-state CAS&#x27;, &#x27;动作后验证、幂等和审计回执&#x27;],
+          gates: [&#x27;运行中 Session 并发规则通过&#x27;, &#x27;merge fail-closed 测试通过&#x27;, &#x27;Review、merge、测试部署、生产部署授权完全分离&#x27;],
+          prerequisites: &#x27;P2 只读状态可证明准确；Policy Engine 和 Audit Store 已稳定。&#x27;,
+          architecture: &#x27;所有按钮只创建 CommandIntent；外部写入只能由 Command Orchestrator 执行。&#x27;,
+          permission: &#x27;按动作独立确认；本阶段不默认开放生产部署和 secret-use。&#x27;,
+          rollback: &#x27;每项动作都有独立 feature flag 和 deny-all 策略，可逐项关闭。&#x27;,
+          tasks: [
+            { id:&#x27;P3.1&#x27;, title:&#x27;定义 Typed Command 契约&#x27;, why:&#x27;自然语言按钮或直接调用 API 无法保证目标、幂等和确认与实际执行一致。&#x27;, actions:[&#x27;为 Session、PR、Review、merge 定义 command schema。&#x27;,&#x27;包含 actor、project、resource、expected state、idempotency key、confirmation scope。&#x27;,&#x27;定义 prepared/authorized/executing/verifying/succeeded/failed/stale。&#x27;], files:&#x27;CommandDomain、CommandStore、Policy integration。&#x27;, output:&#x27;命令 schema、状态机和序列化测试。&#x27;, evidence:&#x27;相同幂等键不重复执行；expected state 变化转 stale。&#x27;, permission:&#x27;无外部写入。&#x27;, failure:&#x27;把用户确认文本与执行参数分离，导致确认 A 执行 B。&#x27;, rollback:&#x27;命令只停在 prepared。&#x27;, depends:&#x27;P2.8&#x27; },
+            { id:&#x27;P3.2&#x27;, title:&#x27;开放 Session 打开、恢复与取消归档&#x27;, why:&#x27;这是低风险入口，可先验证命令管线、App Server 写调用和审计。&#x27;, actions:[&#x27;精确绑定 thread ID。&#x27;,&#x27;调用 thread/resume 或 unarchive 后回读 thread 状态。&#x27;,&#x27;失败时保留原状态并给出可定位错误。&#x27;], files:&#x27;CodexCommandAdapter、Session actions。&#x27;, output:&#x27;open/resume/unarchive commands。&#x27;, evidence:&#x27;目标 thread 与回读状态一致；无剪贴板/AppleScript。&#x27;, permission:&#x27;明确点击。&#x27;, failure:&#x27;按标题模糊匹配错 thread。&#x27;, rollback:&#x27;不改变任务内容；必要时重新 archive。&#x27;, depends:&#x27;P3.1&#x27; },
+            { id:&#x27;P3.3&#x27;, title:&#x27;开放 turn/start 与 turn/steer&#x27;, why:&#x27;核心价值是从项目上下文驱动 Session，但必须尊重运行中 turn。&#x27;, actions:[&#x27;空闲 thread 使用 turn/start。&#x27;,&#x27;运行中优先 steer，不能兼容时排队或拒绝。&#x27;,&#x27;把 repository、PR、current head、目标和约束结构化注入。&#x27;], files:&#x27;CodexCommandAdapter、CommandPolicy。&#x27;, output:&#x27;处理 PR/继续处理命令。&#x27;, evidence:&#x27;不存在同 thread 并发不兼容 turn；审计只存输入摘要。&#x27;, permission:&#x27;用户点击后允许。&#x27;, failure:&#x27;运行中再次 turn/start，造成竞态或重复工作。&#x27;, rollback:&#x27;取消排队指令；不自动 interrupt。&#x27;, depends:&#x27;P3.2&#x27; },
+            { id:&#x27;P3.4&#x27;, title:&#x27;开放 interrupt 与等待队列&#x27;, why:&#x27;停止正在运行的 Session 会丢失进行中工作，风险高于 steer。&#x27;, actions:[&#x27;显示 thread、turn、运行时长和当前活动。&#x27;,&#x27;确认后调用 turn/interrupt。&#x27;,&#x27;回读终止状态并保留未发送队列。&#x27;], files:&#x27;SessionCommandPolicy、QueueProjection。&#x27;, output:&#x27;interrupt command 与本地指令队列。&#x27;, evidence:&#x27;只中断精确 turn；超时/已结束幂等处理。&#x27;, permission:&#x27;单独确认。&#x27;, failure:&#x27;按 session 粗粒度误停新 turn。&#x27;, rollback:&#x27;不能恢复被中断计算；只能以新 turn 继续。&#x27;, depends:&#x27;P3.3&#x27; },
+            { id:&#x27;P3.5&#x27;, title:&#x27;开放 Ready、请求评审与送审核机&#x27;, why:&#x27;这些动作会改变协作状态，但不等于 merge 或 deploy。&#x27;, actions:[&#x27;动作前刷新 PR current head/base、draft、review requests。&#x27;,&#x27;Ready/request-review 绑定最新 head。&#x27;,&#x27;送审核机前后各核 head/base，验证签名回执。&#x27;], files:&#x27;GitHubCommandAdapter、ReviewMachineCommandAdapter。&#x27;, output:&#x27;三类独立命令和回执。&#x27;, evidence:&#x27;head/base 变化立即 stale；审核机未请求显示 NOT_REQUESTED。&#x27;, permission:&#x27;Ready/请求评审需确认；送审为明确点击。&#x27;, failure:&#x27;突出审核机为唯一有效 reviewer，或复用旧 head approval。&#x27;, rollback:&#x27;Ready 可转 Draft；旧审核自动无效，不撤真实 review。&#x27;, depends:&#x27;P3.1,P2.5,P2.6&#x27; },
+            { id:&#x27;P3.6&#x27;, title:&#x27;开放同步最新 main&#x27;, why:&#x27;同步会产生新 head，使旧审批失效，也可能需要解决冲突。&#x27;, actions:[&#x27;无冲突优先 GitHub update-branch，并传 expected head。&#x27;,&#x27;有冲突派给绑定 Session，在独立 worktree 处理。&#x27;,&#x27;禁止默认 force push；完成后刷新 Review/CI。&#x27;], files:&#x27;PRSyncCommand、GitHub/Codex adapters。&#x27;, output:&#x27;可验证 main 同步命令。&#x27;, evidence:&#x27;新 head 是旧 head 的预期后继；旧 approval 标 stale。&#x27;, permission:&#x27;需要确认。&#x27;, failure:&#x27;在脏工作树 rebase 或静默 force push。&#x27;, rollback:&#x27;保留旧 head 引用；冲突不 push。&#x27;, depends:&#x27;P3.3,P3.5&#x27; },
+            { id:&#x27;P3.7&#x27;, title:&#x27;实现强确认 Merge Gate&#x27;, why:&#x27;merge 是进入 main 的不可逆协作动作，必须比 UI 缓存更严格。&#x27;, actions:[&#x27;重新读取 open/draft/head/approval/checks/threads/mergeability。&#x27;,&#x27;运行 merge-tree 与最新 main 兼容性检查。&#x27;,&#x27;要求精确确认文本“合并 PR #N @ sha7”，执行 expected-head squash merge。&#x27;], files:&#x27;MergeCommand、Policy、GitHubAdapter。&#x27;, output:&#x27;fail-closed merge command 与证据卡。&#x27;, evidence:&#x27;任一 unknown、stale、red、冲突、未解决 thread 都拒绝。&#x27;, permission:&#x27;精确 SHA 强确认。&#x27;, failure:&#x27;把 approval、绿 CI 或“PR过了”之外的模糊表达自动扩展为生产部署。&#x27;, rollback:&#x27;GitHub merge 不可回退；需要新 revert PR。&#x27;, depends:&#x27;P3.5,P3.6&#x27; },
+            { id:&#x27;P3.8&#x27;, title:&#x27;把 merge 与 deploy 做成独立后续状态&#x27;, why:&#x27;用户必须清楚代码进入 main、测试环境 live 和生产 live 是三件事。&#x27;, actions:[&#x27;merge 成功只更新 GitHub 状态。&#x27;,&#x27;展示可用但未授权的测试部署动作。&#x27;,&#x27;生产部署始终保持锁定，交给 P4 环境控制。&#x27;], files:&#x27;PRProjection、EnvironmentProjection、Policy。&#x27;, output:&#x27;分层完成状态和独立授权提示。&#x27;, evidence:&#x27;merge 后不会自动 dispatch；UI 分开报告每层证据。&#x27;, permission:&#x27;本步骤不部署。&#x27;, failure:&#x27;显示一个“完成”覆盖 merge、CI、test、prod。&#x27;, rollback:&#x27;无外部部署状态变化。&#x27;, depends:&#x27;P3.7&#x27; }
+          ]
+        },
+        P4: {
+          window: &#x27;建议窗口：4–6 周&#x27;,
+          title: &#x27;Secret Capability 与环境控制&#x27;,
+          outcome: &#x27;建立 secret metadata 目录、受控代执行 Broker、环境证据与独立部署授权，而不是明文密钥浏览器。&#x27;,
+          deliverables: [&#x27;Secret Descriptor/Capability Registry&#x27;, &#x27;Keychain/helper/KMS provider 接口&#x27;, &#x27;测试、staging、canary、prod 环境控制页&#x27;],
+          gates: [&#x27;模型/UI 无明文路径&#x27;, &#x27;audit-before-use 与 redaction 测试&#x27;, &#x27;生产动作独立授权、备份与回退证据齐全&#x27;],
+          prerequisites: &#x27;P3 命令、Policy、审计和 expected-state 已可靠；环境 runbook 已模型化。&#x27;,
+          architecture: &#x27;Secret Broker 与普通 adapters 隔离；environment action 复用 typed command 但使用更高权限 profile。&#x27;,
+          permission: &#x27;metadata 按项目只读；secret-use 按 action 授权；生产 deploy/migration 高危独立授权。&#x27;,
+          rollback: &#x27;Broker 可全局 deny；部署控制可退回只读，现有官方 workflow 保持可用。&#x27;,
+          tasks: [
+            { id:&#x27;P4.1&#x27;, title:&#x27;建立 Secret Inventory 与 Descriptor&#x27;, why:&#x27;先知道有哪些秘密能力、由谁持有、用于哪里，才能谈权限和轮换。&#x27;, actions:[&#x27;枚举 Keychain item、GitHub secret 名称、SSH fingerprint、KMS key/secret metadata。&#x27;,&#x27;只记录 provider、scope、project、environment、exists、fingerprint、rotation。&#x27;,&#x27;识别重复用途但不复制 secret material。&#x27;], files:&#x27;SecretDescriptor schema、provider inventory。&#x27;, output:&#x27;Secret Capability Catalog。&#x27;, evidence:&#x27;目录不含值；GitHub Actions secret 只显示名称/更新时间等平台可得字段。&#x27;, permission:&#x27;metadata.read。&#x27;, failure:&#x27;把本机路径、命令参数或环境变量中的值存入目录。&#x27;, rollback:&#x27;删除本地 catalog 并重新只读枚举。&#x27;, depends:&#x27;P3.8&#x27; },
+            { id:&#x27;P4.2&#x27;, title:&#x27;定义 Capability 与 SecretUseRequest&#x27;, why:&#x27;“读密钥”必须被转换成“允许某主体对某目标执行某动作”。&#x27;, actions:[&#x27;定义 project+environment+action+actor+session+target。&#x27;,&#x27;为每个 descriptor 声明 allowed actions、confirmation、TTL 和 provider binding。&#x27;,&#x27;策略输出 grant/deny，不返回 plaintext。&#x27;], files:&#x27;SecretPolicy、Capability Registry。&#x27;, output:&#x27;版本化 capability schema 和策略矩阵。&#x27;, evidence:&#x27;同一 secret 不能跨项目/环境复用权限；unknown 默认 deny。&#x27;, permission:&#x27;策略配置变更需审计。&#x27;, failure:&#x27;用一个宽 read 权限覆盖所有用途。&#x27;, rollback:&#x27;所有 capability 设 deny。&#x27;, depends:&#x27;P4.1,P3.1&#x27; },
+            { id:&#x27;P4.3&#x27;, title:&#x27;实现 audit-before-use Broker&#x27;, why:&#x27;必须先持久记录意图和授权，再临时取用 secret，否则失败路径会留下无审计使用。&#x27;, actions:[&#x27;SecretUseRequest 先写审计和幂等键。&#x27;,&#x27;provider 在执行瞬间通过 Keychain、stdin、短生命周期 env 或专用 SDK 注入。&#x27;,&#x27;只返回 exit/result/evidence/fingerprint，立即清理临时载体。&#x27;], files:&#x27;SecretCapabilityBroker、Provider protocol。&#x27;, output:&#x27;代执行 Broker 与审计闭环。&#x27;, evidence:&#x27;模型、UI、日志、通知、命令行参数和 Git 历史均无值。&#x27;, permission:&#x27;secret.use，非 secret.read。&#x27;, failure:&#x27;把 secret 交给通用 Session 或通过 argv 传递。&#x27;, rollback:&#x27;吊销 capability、清理临时凭据、provider deny。&#x27;, depends:&#x27;P4.2&#x27; },
+            { id:&#x27;P4.4&#x27;, title:&#x27;接入 Keychain、GitHub Actions 与 SSH&#x27;, why:&#x27;三类 provider 的可读性和安全能力不同，不能用同一个“读取”接口伪装。&#x27;, actions:[&#x27;Keychain 通过 helper 对固定 action 取用。&#x27;,&#x27;GitHub Actions 只管理 metadata 和 workflow dispatch，绝不尝试回读值。&#x27;,&#x27;SSH key 只用 fingerprint/agent/固定 host capability，不导出私钥。&#x27;], files:&#x27;KeychainProvider、GitHubActionsProvider、SSHProvider。&#x27;, output:&#x27;三个 provider 与拒绝用例。&#x27;, evidence:&#x27;GitHub secret 无 read API；SSH 私钥不可通过产品显示；Keychain helper scope 固定。&#x27;, permission:&#x27;按 provider/action 授权。&#x27;, failure:&#x27;为了统一 API 降级成返回 Data/String。&#x27;, rollback:&#x27;逐 provider disable。&#x27;, depends:&#x27;P4.3&#x27; },
+            { id:&#x27;P4.5&#x27;, title:&#x27;完善 Environment Registry 与证据采集&#x27;, why:&#x27;部署动作必须知道目标拓扑、live 指针、workflow、确认码和验证命令。&#x27;, actions:[&#x27;建模 preview、test、staging、canary、prod。&#x27;,&#x27;接入 workflow run、marker、current symlink、version、health 和 browser acceptance refs。&#x27;,&#x27;声明哪些环境共享 backend/DB。&#x27;], files:&#x27;EnvironmentRegistry、EvidenceAdapter。&#x27;, output:&#x27;环境拓扑与 live evidence projection。&#x27;, evidence:&#x27;test.paolab.cn 的 API=prod 被正确表达；@3003/@3004 独立。&#x27;, permission:&#x27;只读 probes。&#x27;, failure:&#x27;根据域名猜环境或把 doc 快照当 live。&#x27;, rollback:&#x27;环境显示 unknown，不开放动作。&#x27;, depends:&#x27;P2.6,P4.1&#x27; },
+            { id:&#x27;P4.6&#x27;, title:&#x27;开放测试环境部署动作&#x27;, why:&#x27;测试 deploy 风险低于生产，但仍不能从 merge 自动触发。&#x27;, actions:[&#x27;仅允许 main + DEPLOY-TEST workflow。&#x27;,&#x27;执行前复核候选范围、审批 baseline 和 current main。&#x27;,&#x27;执行后绑定 run ID、marker、health 与目标环境。&#x27;], files:&#x27;TestDeployCommand、GitHubActionsProvider。&#x27;, output:&#x27;SPA/test 与 backend/staging 两条独立命令。&#x27;, evidence:&#x27;workflow 绿但 marker 未变时不报 live；stale backend run 明确失败。&#x27;, permission:&#x27;独立确认。&#x27;, failure:&#x27;把 push main 当部署或把 staging backend 当 prod。&#x27;, rollback:&#x27;调用正式 rollback runbook，不自动推生产。&#x27;, depends:&#x27;P4.5,P3.8&#x27; },
+            { id:&#x27;P4.7&#x27;, title:&#x27;开放 canary 与生产 promote 控制&#x27;, why:&#x27;这是最高风险动作，必须把代码、数据库、真实用户和回退证据放在同一确认上下文。&#x27;, actions:[&#x27;先显示 promote delta、migration、money path、已验证 release。&#x27;,&#x27;canary 复用 staging build-once artifact 和 peer approval。&#x27;,&#x27;prod 要求 PROMOTE-PROD、维护窗口、备份、rollback、当前 marker CAS。&#x27;], files:&#x27;CanaryCommand、ProdPromoteCommand、Policy。&#x27;, output:&#x27;高危确认卡、执行和验证回执。&#x27;, evidence:&#x27;prod 只提升已验证 artifact；migration readiness fail-closed；正式与测试分开报告。&#x27;, permission:&#x27;高危独立授权；不从普通 Session 自动放行。&#x27;, failure:&#x27;issue body、缓存或旧 SHA 成为生产授权。&#x27;, rollback:&#x27;canary drain；prod 按 release/marker 回退并保留事件链。&#x27;, depends:&#x27;P4.5,P4.6&#x27; },
+            { id:&#x27;P4.8&#x27;, title:&#x27;做安全、泄漏与故障演练&#x27;, why:&#x27;Secret 与生产控制只有在反例验证后才能称为安全能力。&#x27;, actions:[&#x27;测试日志、通知、crash dump、SQLite、argv、env、prompt 的泄漏。&#x27;,&#x27;演练 provider 超时、授权过期、重复请求、进程崩溃和部分执行。&#x27;,&#x27;演练 prod preflight 后 marker 变化、回退和审计恢复。&#x27;], files:&#x27;Security Harness、fault injection、redaction tests。&#x27;, output:&#x27;安全测试矩阵与阻断清单。&#x27;, evidence:&#x27;任何 secret pattern 命中为零；重复/stale 请求不执行；故障后审计可解释。&#x27;, permission:&#x27;只用测试凭据和非生产环境；生产演练另授权。&#x27;, failure:&#x27;只测 happy path 或用真实 secret 做测试 fixture。&#x27;, rollback:&#x27;关闭 Broker/高危 commands，回到只读。&#x27;, depends:&#x27;P4.3-P4.7&#x27; }
+          ]
+        },
+        P5: {
+          window: &#x27;建议窗口：4–6 周起&#x27;,
+          title: &#x27;跨项目与团队自动化&#x27;,
+          outcome: &#x27;在本地控制平面稳定后，再增加远程 agent、团队身份、DeptChat 审批和多设备控制。&#x27;,
+          deliverables: [&#x27;远程 Project Adapter 协议&#x27;, &#x27;团队 RBAC 与 workload identity&#x27;, &#x27;签名事件、outbox、重试和 dead-letter&#x27;],
+          gates: [&#x27;租户/项目作用域隔离&#x27;, &#x27;重放、离线与密钥边界测试&#x27;, &#x27;远程端失联时本地控制不失效&#x27;],
+          prerequisites: &#x27;P4 本地单用户闭环稳定，有真实审计和命令数据证明远程化需求。&#x27;,
+          architecture: &#x27;云端只做项目、策略、事件、审批和审计；Mac Agent 保留本地 Codex、Keychain、SSH 和 checkout。&#x27;,
+          permission: &#x27;远程写操作沿用本地 Policy，不因来自团队或聊天入口而扩大权限。&#x27;,
+          rollback: &#x27;禁用远程 ingress/outbox；本地 App 完整可用。&#x27;,
+          tasks: [
+            { id:&#x27;P5.1&#x27;, title:&#x27;定义远程 Agent 与控制面协议&#x27;, why:&#x27;远程能力必须通过明确契约接入，而不是把本机端口直接暴露。&#x27;, actions:[&#x27;定义 agent enrollment、heartbeat、capabilities、commands、results。&#x27;,&#x27;命令绑定 project、machine、expected state 和 expiry。&#x27;,&#x27;只上传脱敏事件和证据摘要。&#x27;], files:&#x27;RemoteAgent protocol、API schema。&#x27;, output:&#x27;版本化协议和兼容策略。&#x27;, evidence:&#x27;未知版本拒绝写命令；本地资源不泄漏绝对路径/secret。&#x27;, permission:&#x27;远程只读先行。&#x27;, failure:&#x27;把本地 daemon 直接开放公网。&#x27;, rollback:&#x27;关闭远程 listener。&#x27;, depends:&#x27;P4.8&#x27; },
+            { id:&#x27;P5.2&#x27;, title:&#x27;建立 workload identity 与注册&#x27;, why:&#x27;需要证明发送结果的是被批准的 Mac/runner，而不是仅持有共享 token 的任意进程。&#x27;, actions:[&#x27;使用 challenge + Ed25519 proof-of-possession。&#x27;,&#x27;控制面只存公钥/SPKI/fingerprint。&#x27;,&#x27;本机私钥留 Keychain 且不可同步。&#x27;], files:&#x27;Enrollment service、macOS identity helper。&#x27;, output:&#x27;机器身份、轮换和吊销流程。&#x27;, evidence:&#x27;重放 challenge、错 fingerprint、过期签名均拒绝。&#x27;, permission:&#x27;管理员批准注册。&#x27;, failure:&#x27;共享长期 token 代表机器身份。&#x27;, rollback:&#x27;吊销 workload，保留本地模式。&#x27;, depends:&#x27;P5.1&#x27; },
+            { id:&#x27;P5.3&#x27;, title:&#x27;加入组织、项目与角色作用域&#x27;, why:&#x27;单用户规则不能直接扩成团队权限。&#x27;, actions:[&#x27;定义 org/project membership、roles、capability grants。&#x27;,&#x27;CODEOWNER、reviewer、deploy operator 和 secret operator 分离。&#x27;,&#x27;策略决策记录 actor 与 delegated authority。&#x27;], files:&#x27;RBAC model、Policy extension。&#x27;, output:&#x27;团队权限模型和越权测试。&#x27;, evidence:&#x27;跨项目、跨环境、自己审批自己等路径 fail-closed。&#x27;, permission:&#x27;管理员配置。&#x27;, failure:&#x27;用 GitHub admin 身份等同全部业务权限。&#x27;, rollback:&#x27;远程 action 全 deny，仅保留观察。&#x27;, depends:&#x27;P5.2&#x27; },
+            { id:&#x27;P5.4&#x27;, title:&#x27;建立签名事件入口与可靠交付&#x27;, why:&#x27;PR、CI、服务器和本地 Agent 事件需要去重、重试并可审计。&#x27;, actions:[&#x27;事件 envelope 绑定 tenant/project/source/dedupe/signature。&#x27;,&#x27;platform_events 与 outbox 同事务写入。&#x27;,&#x27;dispatcher 实现 backoff、dead-letter 和人工重放。&#x27;], files:&#x27;Event ingress、outbox dispatcher。&#x27;, output:&#x27;可靠事件管线与运维面板。&#x27;, evidence:&#x27;重复事件不重复生效；delivery 失败不丢原事件。&#x27;, permission:&#x27;签名 source allowlist。&#x27;, failure:&#x27;dedupe 跨项目冲突或先 ack 后未持久化。&#x27;, rollback:&#x27;停止 dispatcher，事件仍安全留存。&#x27;, depends:&#x27;P5.1,P5.3&#x27; },
+            { id:&#x27;P5.5&#x27;, title:&#x27;接入 DeptChat/通知审批前台&#x27;, why:&#x27;聊天适合作为提醒和人工确认入口，但不能成为事实源或绕过强确认。&#x27;, actions:[&#x27;映射 info→normal、warning/critical→important。&#x27;,&#x27;消息只带摘要、证据链接和精确确认挑战。&#x27;,&#x27;回执必须回到 Control Plane 重新验证 current state。&#x27;], files:&#x27;Notification adapter、approval callback。&#x27;, output:&#x27;通知、重要消息和审批回链。&#x27;, evidence:&#x27;编辑消息正文不能改变 canonical command；过期确认拒绝。&#x27;, permission:&#x27;通知默认；动作仍走原 Policy。&#x27;, failure:&#x27;把可编辑 Issue/聊天消息当部署授权。&#x27;, rollback:&#x27;关闭回执，只保留通知。&#x27;, depends:&#x27;P5.4&#x27; },
+            { id:&#x27;P5.6&#x27;, title:&#x27;实现多设备状态与冲突治理&#x27;, why:&#x27;多台 Mac 或 runner 可能同时控制同一 PR/Session/环境，需要租约和 expected state。&#x27;, actions:[&#x27;展示 agent 在线、能力、最后心跳和当前任务。&#x27;,&#x27;命令分配用 lease、CAS 和幂等键。&#x27;,&#x27;同资源冲突时排队、拒绝或要求重新确认。&#x27;], files:&#x27;Presence、Lease、Command routing。&#x27;, output:&#x27;多设备控制台和冲突策略。&#x27;, evidence:&#x27;断线 agent 的 lease 可安全过期；迟到结果不能覆盖新状态。&#x27;, permission:&#x27;按机器 capability。&#x27;, failure:&#x27;最后写入覆盖或两个机器同时 merge/deploy。&#x27;, rollback:&#x27;固定资源只由主 Mac 执行。&#x27;, depends:&#x27;P5.2,P5.4&#x27; },
+            { id:&#x27;P5.7&#x27;, title:&#x27;用第二个真实项目做受控试点&#x27;, why:&#x27;跨项目抽象只有在不同仓库、流程和环境中验证后才可信。&#x27;, actions:[&#x27;选择 OPCB FDE 或另一个低风险项目。&#x27;,&#x27;只接只读 Registry、PR、Session、路线图和审计。&#x27;,&#x27;对比适配成本，修正通用 schema 与项目扩展点。&#x27;], files:&#x27;第二项目 adapter/config、试点报告。&#x27;, output:&#x27;跨项目验收和抽象修订。&#x27;, evidence:&#x27;新增项目不复制核心代码；项目差异全部在 registry/adapter。&#x27;, permission:&#x27;只读试点；写操作另立阶段。&#x27;, failure:&#x27;为通过试点把项目特例塞回 core。&#x27;, rollback:&#x27;移除试点 registry，不影响 SIXLAB。&#x27;, depends:&#x27;P5.3-P5.6&#x27; }
+          ]
+        }
+      };
+      const phaseButtons = Array.from(root.querySelectorAll(&#x27;[data-spb-phase]&#x27;));
+      const phaseSegments = Array.from(root.querySelectorAll(&#x27;[data-spb-phase-segment]&#x27;));
+      const phaseFields = {
+        code: root.querySelector(&#x27;[data-spb-phase-code]&#x27;),
+        window: root.querySelector(&#x27;[data-spb-phase-window]&#x27;),
+        title: root.querySelector(&#x27;[data-spb-phase-title]&#x27;),
+        outcome: root.querySelector(&#x27;[data-spb-phase-outcome]&#x27;),
+        deliverables: root.querySelector(&#x27;[data-spb-phase-deliverables]&#x27;),
+        gates: root.querySelector(&#x27;[data-spb-phase-gates]&#x27;),
+        prerequisites: root.querySelector(&#x27;[data-spb-phase-prerequisites]&#x27;),
+        architecture: root.querySelector(&#x27;[data-spb-phase-architecture]&#x27;),
+        permission: root.querySelector(&#x27;[data-spb-phase-permission]&#x27;),
+        rollback: root.querySelector(&#x27;[data-spb-phase-rollback]&#x27;),
+        taskRows: root.querySelector(&#x27;[data-spb-task-rows]&#x27;)
+      };
+      const taskFields = {
+        id: root.querySelector(&#x27;[data-spb-task-id]&#x27;),
+        depends: root.querySelector(&#x27;[data-spb-task-depends]&#x27;),
+        title: root.querySelector(&#x27;[data-spb-task-title]&#x27;),
+        why: root.querySelector(&#x27;[data-spb-task-why]&#x27;),
+        actions: root.querySelector(&#x27;[data-spb-task-actions]&#x27;),
+        files: root.querySelector(&#x27;[data-spb-task-files]&#x27;),
+        output: root.querySelector(&#x27;[data-spb-task-output]&#x27;),
+        evidence: root.querySelector(&#x27;[data-spb-task-evidence]&#x27;),
+        permission: root.querySelector(&#x27;[data-spb-task-permission]&#x27;),
+        failure: root.querySelector(&#x27;[data-spb-task-failure]&#x27;),
+        rollback: root.querySelector(&#x27;[data-spb-task-rollback]&#x27;)
+      };
+      const renderList = (element, values) =&gt; {
+        element.replaceChildren(...values.map((value) =&gt; {
+          const item = document.createElement(&#x27;li&#x27;);
+          item.textContent = value;
+          return item;
+        }));
+      };
+      const renderTask = (task) =&gt; {
+        if (!task) return;
+        taskFields.id.textContent = task.id;
+        taskFields.depends.textContent = `前置：${task.depends}`;
+        taskFields.title.textContent = task.title;
+        taskFields.why.textContent = task.why;
+        renderList(taskFields.actions, task.actions);
+        taskFields.files.textContent = task.files;
+        taskFields.output.textContent = task.output;
+        taskFields.evidence.textContent = task.evidence;
+        taskFields.permission.textContent = task.permission;
+        taskFields.failure.textContent = task.failure;
+        taskFields.rollback.textContent = task.rollback;
+        root.querySelectorAll(&#x27;[data-spb-task-button]&#x27;).forEach((button) =&gt; {
+          const active = button.getAttribute(&#x27;data-spb-task-button&#x27;) === task.id;
+          button.setAttribute(&#x27;aria-pressed&#x27;, String(active));
+          button.classList.toggle(&#x27;btn-primary&#x27;, active);
+        });
+      };
+      const renderTasks = (tasks) =&gt; {
+        const rows = tasks.map((task) =&gt; {
+          const row = document.createElement(&#x27;tr&#x27;);
+          const idCell = document.createElement(&#x27;td&#x27;);
+          const titleCell = document.createElement(&#x27;td&#x27;);
+          const outputCell = document.createElement(&#x27;td&#x27;);
+          const evidenceCell = document.createElement(&#x27;td&#x27;);
+          const permissionCell = document.createElement(&#x27;td&#x27;);
+          const id = document.createElement(&#x27;code&#x27;);
+          const select = document.createElement(&#x27;button&#x27;);
+          id.textContent = task.id;
+          select.type = &#x27;button&#x27;;
+          select.className = &#x27;btn btn-ghost&#x27;;
+          select.textContent = task.title;
+          select.setAttribute(&#x27;data-spb-task-button&#x27;, task.id);
+          select.setAttribute(&#x27;aria-pressed&#x27;, &#x27;false&#x27;);
+          select.addEventListener(&#x27;click&#x27;, () =&gt; renderTask(task));
+          outputCell.textContent = task.output;
+          evidenceCell.textContent = task.evidence;
+          permissionCell.textContent = task.permission;
+          idCell.append(id);
+          titleCell.append(select);
+          row.append(idCell, titleCell, outputCell, evidenceCell, permissionCell);
+          return row;
+        });
+        phaseFields.taskRows.replaceChildren(...rows);
+      };
+      phaseButtons.forEach((button) =&gt; {
+        button.addEventListener(&#x27;click&#x27;, () =&gt; {
+          const key = button.getAttribute(&#x27;data-spb-phase&#x27;);
+          const data = key ? phaseData[key] : null;
+          if (!key || !data) return;
+          phaseButtons.forEach((candidate) =&gt; {
+            const active = candidate === button;
+            candidate.setAttribute(&#x27;aria-pressed&#x27;, String(active));
+            candidate.classList.toggle(&#x27;btn-primary&#x27;, active);
+          });
+          phaseSegments.forEach((segment) =&gt; segment.classList.toggle(&#x27;is-active&#x27;, segment.getAttribute(&#x27;data-spb-phase-segment&#x27;) === key));
+          phaseFields.code.textContent = key;
+          phaseFields.window.textContent = data.window;
+          phaseFields.title.textContent = data.title;
+          phaseFields.outcome.textContent = data.outcome;
+          renderList(phaseFields.deliverables, data.deliverables);
+          renderList(phaseFields.gates, data.gates);
+          phaseFields.prerequisites.textContent = data.prerequisites;
+          phaseFields.architecture.textContent = data.architecture;
+          phaseFields.permission.textContent = data.permission;
+          phaseFields.rollback.textContent = data.rollback;
+          renderTasks(data.tasks);
+          renderTask(data.tasks[0]);
+        });
+      });
+      renderTasks(phaseData.P0.tasks);
+      renderTask(phaseData.P0.tasks[0]);
+    })();
+  &lt;/script&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Better Harness 运行产物（非交付物）
+.qoder/
+
+# macOS
+.DS_Store
