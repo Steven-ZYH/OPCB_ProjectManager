@@ -3,3 +3,6 @@
 
 # macOS
 .DS_Store
+
+# Local recovery carriers may contain private repository and cache snapshots.
+evidence/**/private/

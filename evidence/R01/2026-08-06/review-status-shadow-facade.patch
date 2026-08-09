@@ -1,0 +1,573 @@
+diff --git a/build-native.sh b/build-native.sh
+index 773f4c218e6a2d0ff052dba00e563145fdd39670..89b7750700f40e8fb0c4ed6494a89b61ad0a6a0f 100755
+--- a/build-native.sh
++++ b/build-native.sh
+@@ -47,6 +47,7 @@ TMPDIR="$compiler_tmp" \
+   "$project_dir/native/CodexSessionResolver.swift" \
+   "$project_dir/native/ReviewMachineSSH.swift" \
+   "$project_dir/native/ReviewMachineQueue.swift" \
++  "$project_dir/native/ReviewMachineStatusLegacyFacade.swift" \
+   "$project_dir/native/AppTheme.swift" \
+   "$project_dir/native/GitHubClient.swift" \
+   "$project_dir/native/SnapshotLegacyFacade.swift" \
+diff --git a/native/AppDelegate.swift b/native/AppDelegate.swift
+index d60ef8a17626f5a23bfc18b17c2a745023c36011..ca0aa5b29196f2beddd41f9aa850f1615858fd15 100644
+--- a/native/AppDelegate.swift
++++ b/native/AppDelegate.swift
+@@ -14,6 +14,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+     private lazy var snapshotFacade = SnapshotLegacyFacade(legacyStore: store)
+     private let detailStore = PullRequestDetailStore()
+     private let reviewMachineStatusStore = ReviewMachineStatusStore()
++    private lazy var reviewMachineStatusFacade = ReviewMachineStatusLegacyFacade(
++        legacyStore: reviewMachineStatusStore
++    )
+     private let reviewMachineSSH = ReviewMachineSSHClient()
+     private let reviewMachineQueue = ReviewMachineQueueClient()
+     private let roadmapClient = RoadmapClient()
+@@ -69,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+         if let roadmapSnapshot {
+             dashboard.updateRoadmaps(roadmapSnapshot)
+         }
+-        if let cached = reviewMachineStatusStore.load() {
++        if let cached = reviewMachineStatusFacade.load() {
+             latestReviewMachineStatus = cached
+             dashboard.updateReviewMachineStatus(cached)
+         }
+@@ -1149,6 +1152,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+                 )
+                 self.latestReviewMachineStatus = snapshot
+                 self.reviewMachineStatusStore.save(snapshot)
++                if self.reviewMachineStatusFacade.mode == .shadow {
++                    _ = self.reviewMachineStatusFacade.load()
++                }
+                 self.dashboard.updateReviewMachineStatus(snapshot)
+             case .failure(let error):
+                 self.dashboard.updateReviewMachineStatusFailure(
+diff --git a/native/ReviewMachineQueue.swift b/native/ReviewMachineQueue.swift
+index 55bf6ff985ea639bc352e3285dea0d481f08f8af..2c1b53f229d80d1b46bf79fdc42a59070ba0cb93 100644
+--- a/native/ReviewMachineQueue.swift
++++ b/native/ReviewMachineQueue.swift
+@@ -416,6 +416,8 @@ final class ReviewMachineStatusStore {
+             from: data
+         )
+     }
++
++    var storageURL: URL? { fileURL }
+ }
+ 
+ struct ReviewMachineJobState: Codable, Equatable {
+diff --git a/native/ReviewMachineStatusLegacyFacade.swift b/native/ReviewMachineStatusLegacyFacade.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..a5c3a44b98f5645bc1e69fc4838815386cdb1c4d
+--- /dev/null
++++ b/native/ReviewMachineStatusLegacyFacade.swift
+@@ -0,0 +1,325 @@
++import Foundation
++
++enum ReviewMachineStatusFacadeMode: Equatable {
++    case legacyOnly
++    case shadow
++
++    static func from(environment: [String: String] = ProcessInfo.processInfo.environment) -> ReviewMachineStatusFacadeMode {
++        environment["OPCB_REVIEW_MACHINE_STATUS_FACADE_MODE"]?.lowercased() == "shadow" ? .shadow : .legacyOnly
++    }
++}
++
++private struct ReviewMachineStatusCacheV1: Decodable {
++    struct Machine: Decodable {
++        let thermalState: String
++        let temperatureAvailable: Bool
++        let powerAvailable: Bool
++
++        enum CodingKeys: String, CodingKey {
++            case thermalState = "thermal_state"
++            case temperatureAvailable = "temperature_available"
++            case powerAvailable = "power_available"
++        }
++    }
++
++    struct Worker: Decodable {
++        let queueDepth: Int
++        let activeJobCount: Int
++        let phase: String?
++
++        enum CodingKeys: String, CodingKey {
++            case queueDepth = "queue_depth"
++            case activeJobCount = "active_job_count"
++            case phase
++        }
++    }
++
++    struct QuotaWindow: Decodable {
++        let kind: String
++        let remainingPercent: Double
++        let windowDurationMinutes: Int
++        let resetsAt: Int64?
++
++        enum CodingKeys: String, CodingKey {
++            case kind
++            case remainingPercent = "remaining_percent"
++            case windowDurationMinutes = "window_duration_mins"
++            case resetsAt = "resets_at"
++        }
++    }
++
++    struct QuotaPrediction: Decodable {
++        let predictedAt: Int64
++        let windowKind: String
++        let source: String
++
++        enum CodingKeys: String, CodingKey {
++            case predictedAt = "predicted_at"
++            case windowKind = "window_kind"
++            case source
++        }
++    }
++
++    struct Codex: Decodable {
++        let processRunning: Bool
++        let quotaRemainingPercent: Double?
++        let quotaAvailable: Bool
++        let quotaWindows: [QuotaWindow]?
++        let quotaResetPrediction: QuotaPrediction?
++
++        enum CodingKeys: String, CodingKey {
++            case processRunning = "process_running"
++            case quotaRemainingPercent = "quota_remaining_percent"
++            case quotaAvailable = "quota_available"
++            case quotaWindows = "quota_windows"
++            case quotaResetPrediction = "quota_reset_prediction"
++        }
++    }
++
++    struct News: Decodable {
++        struct Item: Decodable {}
++        let status: String
++        let latest: Item?
++        let latestQuotaSignal: Item?
++
++        enum CodingKeys: String, CodingKey {
++            case status, latest
++            case latestQuotaSignal = "latest_quota_signal"
++        }
++    }
++
++    let schemaVersion: Int
++    let sampledAt: String
++    let receivedAt: Date
++    let machine: Machine
++    let worker: Worker
++    let codex: Codex
++    let news: News?
++
++    enum CodingKeys: String, CodingKey {
++        case schemaVersion = "schema_version"
++        case sampledAt = "sampled_at"
++        case receivedAt = "received_at"
++        case machine, worker, codex, news
++    }
++
++    func projection(rawData: Data, now: Date, freshness: TimeInterval) throws -> SnapshotProjection {
++        guard schemaVersion == 1 else {
++            throw DomainValidationError.unsupportedSchemaVersion(schemaVersion)
++        }
++        var fields = try CanonicalJSONFieldProjector.flatten(rawData)
++        appendDerivedFields(
++            to: &fields,
++            now: now,
++            freshness: freshness,
++            receivedAt: receivedAt,
++            thermalState: machine.thermalState,
++            temperatureAvailable: machine.temperatureAvailable,
++            powerAvailable: machine.powerAvailable,
++            queueDepth: worker.queueDepth,
++            activeJobCount: worker.activeJobCount,
++            workerPhase: worker.phase,
++            processRunning: codex.processRunning,
++            quotaAvailable: codex.quotaAvailable,
++            quotaRemainingPercent: codex.quotaRemainingPercent,
++            quotaWindows: codex.quotaWindows?.map {
++                ($0.kind, $0.remainingPercent, $0.windowDurationMinutes, $0.resetsAt)
++            },
++            prediction: codex.quotaResetPrediction.map {
++                ($0.predictedAt, $0.windowKind, $0.source)
++            },
++            newsStatus: news?.status,
++            hasLatestNews: news?.latest != nil,
++            hasQuotaSignal: news?.latestQuotaSignal != nil
++        )
++        return SnapshotProjection(fields: fields)
++    }
++}
++
++private func appendDerivedFields(
++    to fields: inout [String: ShadowFieldValue],
++    now: Date,
++    freshness: TimeInterval,
++    receivedAt: Date,
++    thermalState: String,
++    temperatureAvailable: Bool,
++    powerAvailable: Bool,
++    queueDepth: Int,
++    activeJobCount: Int,
++    workerPhase: String?,
++    processRunning: Bool,
++    quotaAvailable: Bool,
++    quotaRemainingPercent: Double?,
++    quotaWindows: [(String, Double, Int, Int64?)]?,
++    prediction: (Int64, String, String)?,
++    newsStatus: String?,
++    hasLatestNews: Bool,
++    hasQuotaSignal: Bool
++) {
++    fields["derived/isFresh"] = .value(String(now.timeIntervalSince(receivedAt) < freshness))
++    fields["derived/hasActiveWork"] = .value(String(activeJobCount > 0 || processRunning))
++    fields["derived/thermalState"] = .value(thermalState)
++    fields["derived/temperatureAvailable"] = .value(String(temperatureAvailable))
++    fields["derived/powerAvailable"] = .value(String(powerAvailable))
++    fields["derived/worker/queueDepth"] = .value(String(queueDepth))
++    fields["derived/worker/activeJobCount"] = .value(String(activeJobCount))
++    fields["derived/worker/phase"] = workerPhase.map(ShadowFieldValue.value) ?? .missing
++    fields["derived/codex/processRunning"] = .value(String(processRunning))
++    fields["derived/quota/available"] = .value(String(quotaAvailable))
++    fields["derived/quota/remainingPercent"] = quotaRemainingPercent.map { .value(String($0)) } ?? .missing
++
++    let limitingWindow = quotaWindows?.min {
++        if $0.1 == $1.1 { return $0.2 < $1.2 }
++        return $0.1 < $1.1
++    }
++    let resetEpoch = prediction?.0 ?? limitingWindow?.3
++    let resetWindow = prediction?.1 ?? limitingWindow?.0
++    let resetSource = prediction?.2 ?? (limitingWindow == nil ? nil : "window")
++    fields["derived/quota/resetEpoch"] = resetEpoch.map { .value(String($0)) } ?? .missing
++    fields["derived/quota/resetWindow"] = resetWindow.map(ShadowFieldValue.value) ?? .missing
++    fields["derived/quota/resetSource"] = resetSource.map(ShadowFieldValue.value) ?? .missing
++    fields["derived/news/status"] = newsStatus.map(ShadowFieldValue.value) ?? .missing
++    fields["derived/news/hasLatest"] = .value(String(hasLatestNews))
++    fields["derived/news/hasQuotaSignal"] = .value(String(hasQuotaSignal))
++}
++
++private enum LegacyReviewMachineStatusProjectionFactory {
++    static func make(
++        _ snapshot: ReviewMachineStatusSnapshot,
++        now: Date,
++        freshness: TimeInterval
++    ) throws -> SnapshotProjection {
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .iso8601
++        var fields = try CanonicalJSONFieldProjector.flatten(encoder.encode(snapshot))
++        appendDerivedFields(
++            to: &fields,
++            now: now,
++            freshness: freshness,
++            receivedAt: snapshot.receivedAt,
++            thermalState: snapshot.machine.thermalState,
++            temperatureAvailable: snapshot.machine.temperatureAvailable,
++            powerAvailable: snapshot.machine.powerAvailable,
++            queueDepth: snapshot.worker.queueDepth,
++            activeJobCount: snapshot.worker.activeJobCount,
++            workerPhase: snapshot.worker.phase,
++            processRunning: snapshot.codex.processRunning,
++            quotaAvailable: snapshot.codex.quotaAvailable,
++            quotaRemainingPercent: snapshot.codex.quotaRemainingPercent,
++            quotaWindows: snapshot.codex.quotaWindows?.map {
++                ($0.kind, $0.remainingPercent, $0.windowDurationMinutes, $0.resetsAt)
++            },
++            prediction: snapshot.codex.quotaResetPrediction.map {
++                ($0.predictedAt, $0.windowKind, $0.source)
++            },
++            newsStatus: snapshot.news?.status,
++            hasLatestNews: snapshot.news?.latest != nil,
++            hasQuotaSignal: snapshot.news?.latestQuotaSignal != nil
++        )
++        return SnapshotProjection(fields: fields)
++    }
++}
++
++final class ReviewMachineStatusCacheV1Adapter {
++    private let freshness: TimeInterval
++
++    init(freshness: TimeInterval = 5 * 60) {
++        self.freshness = freshness
++    }
++
++    func load(fileURL: URL?, now: Date = Date()) -> Observed<SnapshotProjection> {
++        let source = SourceRef(system: "review-machine-status-cache-v1", locator: fileURL?.path ?? "unavailable")
++        guard let fileURL else {
++            return Observed(value: nil, source: source, observedAt: now, expiresAt: nil, generation: 0, freshness: .unknown, error: ObservationFailure(kind: .unsupported, message: "application support directory unavailable"))
++        }
++        let data: Data
++        do { data = try Data(contentsOf: fileURL) }
++        catch {
++            return Observed(value: nil, source: source, observedAt: now, expiresAt: nil, generation: 0, freshness: .unknown, error: ObservationFailure(kind: .missingEvidence, message: "review machine status cache has not been observed"))
++        }
++        do {
++            let decoder = JSONDecoder()
++            decoder.dateDecodingStrategy = .iso8601
++            let snapshot = try decoder.decode(ReviewMachineStatusCacheV1.self, from: data)
++            let projection = try snapshot.projection(rawData: data, now: now, freshness: freshness)
++            let expiresAt = snapshot.receivedAt.addingTimeInterval(freshness)
++            return Observed(
++                value: projection,
++                source: source,
++                observedAt: snapshot.receivedAt,
++                expiresAt: expiresAt,
++                generation: UInt64(max(0, snapshot.receivedAt.timeIntervalSince1970)),
++                freshness: now >= expiresAt ? .stale : .cached
++            )
++        } catch {
++            return Observed(value: nil, source: source, observedAt: now, expiresAt: nil, generation: 0, freshness: .unreachable, error: ObservationFailure(kind: .invalidData, message: "review machine status cache decode failed"))
++        }
++    }
++}
++
++final class ReviewMachineStatusLegacyFacade {
++    private let legacyStore: ReviewMachineStatusStore
++    private let adapter = ReviewMachineStatusCacheV1Adapter()
++    private let freshness: TimeInterval
++    private(set) var lastReport: ShadowComparisonReport?
++    private(set) var comparisonError: String?
++    var mode: ReviewMachineStatusFacadeMode
++
++    init(
++        legacyStore: ReviewMachineStatusStore,
++        freshness: TimeInterval = 5 * 60,
++        mode: ReviewMachineStatusFacadeMode = .from()
++    ) {
++        self.legacyStore = legacyStore
++        self.freshness = freshness
++        self.mode = mode
++    }
++
++    func load(now: Date = Date()) -> ReviewMachineStatusSnapshot? {
++        let legacy = legacyStore.load()
++        guard mode == .shadow else {
++            lastReport = nil
++            comparisonError = nil
++            return legacy
++        }
++        do {
++            let report = try SnapshotShadowComparator.compare(
++                legacy: try observeLegacy(legacy, now: now),
++                candidate: adapter.load(fileURL: legacyStore.storageURL, now: now),
++                resource: ResourceRef(kind: "review-machine-status-cache", identifier: "review-machine-status.json"),
++                comparedAt: now,
++                allowedDifferences: [
++                    AllowedDifference(fieldPath: "observation.source.system", reason: "legacy and v1 adapters have intentionally distinct source identities")
++                ]
++            )
++            lastReport = report
++            comparisonError = nil
++            let paths = report.differences.map(\.fieldPath).joined(separator: ",")
++            NSLog("OPCB_R01_REVIEW_STATUS_SHADOW differences=%d unexplained=%d fields=%@", report.differences.count, report.unexplainedDifferences.count, paths)
++        } catch {
++            lastReport = nil
++            comparisonError = String(describing: error)
++            NSLog("OPCB_R01_REVIEW_STATUS_SHADOW comparison_error=%@", String(describing: error))
++        }
++        return legacy
++    }
++
++    private func observeLegacy(
++        _ snapshot: ReviewMachineStatusSnapshot?,
++        now: Date
++    ) throws -> Observed<SnapshotProjection> {
++        let source = SourceRef(system: "legacy-review-machine-status-store", locator: legacyStore.storageURL?.path ?? "unavailable")
++        guard let snapshot else {
++            return Observed(value: nil, source: source, observedAt: now, expiresAt: nil, generation: 0, freshness: .unknown, error: ObservationFailure(kind: .missingEvidence, message: "legacy cache returned no status snapshot"))
++        }
++        let expiresAt = snapshot.receivedAt.addingTimeInterval(freshness)
++        return Observed(
++            value: try LegacyReviewMachineStatusProjectionFactory.make(snapshot, now: now, freshness: freshness),
++            source: source,
++            observedAt: snapshot.receivedAt,
++            expiresAt: expiresAt,
++            generation: UInt64(max(0, snapshot.receivedAt.timeIntervalSince1970)),
++            freshness: now >= expiresAt ? .stale : .cached
++        )
++    }
++}
+diff --git a/test-native.sh b/test-native.sh
+index db560baa9e57cc65832f71ceff889391ca28e77d..31a3aac0de1db7652f0cdbc34a1749b03b46704a 100755
+--- a/test-native.sh
++++ b/test-native.sh
+@@ -29,6 +29,7 @@ sources=(
+   "$project_dir/native/CodexSessionResolver.swift"
+   "$project_dir/native/ReviewMachineSSH.swift"
+   "$project_dir/native/ReviewMachineQueue.swift"
++  "$project_dir/native/ReviewMachineStatusLegacyFacade.swift"
+   "$project_dir/native/AppTheme.swift"
+   "$project_dir/native/GitHubClient.swift"
+   "$project_dir/native/SnapshotLegacyFacade.swift"
+@@ -49,6 +50,7 @@ tests=(
+   NativeRoadmapSmoke
+   NativeRoadmapFacadeSmoke
+   NativeSnapshotFacadeSmoke
++  NativeReviewMachineStatusFacadeSmoke
+   NativeDashboardRender
+   NativePRDetailRender
+ )
+diff --git a/tests/NativeReviewMachineStatusFacadeSmoke.swift b/tests/NativeReviewMachineStatusFacadeSmoke.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..406a7bd11b5bfed25baf1f341ad57ed36527f4a7
+--- /dev/null
++++ b/tests/NativeReviewMachineStatusFacadeSmoke.swift
+@@ -0,0 +1,158 @@
++import Foundation
++
++@main
++private struct NativeReviewMachineStatusFacadeSmoke {
++    static func main() throws {
++        if CommandLine.arguments.count == 2 {
++            try auditFrozenCache(at: URL(fileURLWithPath: CommandLine.arguments[1]))
++            return
++        }
++        let directory = FileManager.default.temporaryDirectory
++            .appendingPathComponent(UUID().uuidString, isDirectory: true)
++        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let fileURL = directory.appendingPathComponent("review-machine-status.json")
++        let receivedAt = Date(timeIntervalSince1970: 1_800_000_000)
++        let snapshot = makeSnapshot(receivedAt: receivedAt)
++        let store = ReviewMachineStatusStore(fileURL: fileURL)
++        store.save(snapshot)
++
++        let legacyOnly = ReviewMachineStatusLegacyFacade(legacyStore: store, mode: .legacyOnly)
++        precondition(legacyOnly.load() == snapshot)
++        precondition(legacyOnly.lastReport == nil)
++
++        let shadow = ReviewMachineStatusLegacyFacade(legacyStore: store, mode: .shadow)
++        precondition(shadow.load(now: receivedAt.addingTimeInterval(299)) == snapshot)
++        let freshReport = try require(shadow.lastReport, "fresh shadow report missing")
++        precondition(freshReport.isEquivalent)
++        precondition(freshReport.differences.count == 1)
++        precondition(freshReport.differences[0].fieldPath == "observation.source.system")
++
++        precondition(shadow.load(now: receivedAt.addingTimeInterval(300)) == snapshot)
++        let staleReport = try require(shadow.lastReport, "stale shadow report missing")
++        precondition(staleReport.isEquivalent)
++        precondition(staleReport.unexplainedDifferences.isEmpty)
++
++        let missingStore = ReviewMachineStatusStore(fileURL: directory.appendingPathComponent("missing.json"))
++        let missingFacade = ReviewMachineStatusLegacyFacade(legacyStore: missingStore, mode: .shadow)
++        precondition(missingFacade.load() == nil)
++        precondition(missingFacade.lastReport?.isEquivalent == true)
++
++        try Data("not-json".utf8).write(to: fileURL)
++        precondition(shadow.load() == nil)
++        let corruptReport = try require(shadow.lastReport, "corrupt report missing")
++        precondition(!corruptReport.isEquivalent)
++        precondition(corruptReport.unexplainedDifferences.contains { $0.fieldPath == "observation.errorKind" })
++
++        store.save(snapshot)
++        var unsupported = try require(JSONSerialization.jsonObject(with: Data(contentsOf: fileURL)) as? [String: Any], "status object missing")
++        unsupported["schema_version"] = 2
++        try JSONSerialization.data(withJSONObject: unsupported).write(to: fileURL)
++        precondition(shadow.load() != nil, "legacy decoder should preserve its existing version behavior")
++        let unsupportedReport = try require(shadow.lastReport, "unsupported version report missing")
++        precondition(!unsupportedReport.isEquivalent)
++        precondition(unsupportedReport.unexplainedDifferences.contains { $0.fieldPath == "observation.freshness" })
++
++        precondition(ReviewMachineStatusFacadeMode.from(environment: [:]) == .legacyOnly)
++        precondition(ReviewMachineStatusFacadeMode.from(environment: ["OPCB_REVIEW_MACHINE_STATUS_FACADE_MODE": "shadow"]) == .shadow)
++        print("NativeReviewMachineStatusFacadeSmoke: PASS")
++    }
++
++    private static func makeSnapshot(receivedAt: Date) -> ReviewMachineStatusSnapshot {
++        let machine = ReviewMachineMetrics(
++            hostname: "review-machine",
++            architecture: "arm64",
++            osVersion: "26.5",
++            cpuPercent: 12.5,
++            loadAverage: [1.0, 0.8, 0.7],
++            memoryUsedBytes: 8_589_934_592,
++            memoryTotalBytes: 17_179_869_184,
++            memoryPercent: 50,
++            diskFreeBytes: 60,
++            diskTotalBytes: 100,
++            diskPercent: 40,
++            uptimeSeconds: 1_000,
++            thermalState: "normal",
++            temperatureCelsius: nil,
++            temperatureAvailable: false,
++            temperatureReason: "permission required",
++            powerWatts: nil,
++            powerAvailable: false,
++            powerReason: "permission required"
++        )
++        let worker = ReviewMachineWorkerMetrics(
++            version: "1.8.0",
++            queueDepth: 0,
++            activeJobCount: 1,
++            phase: "running",
++            jobElapsedSeconds: 12
++        )
++        let windows = [
++            ReviewMachineQuotaWindow(kind: "primary", usedPercent: 25, remainingPercent: 75, windowDurationMinutes: 300, resetsAt: 1_800_003_000),
++            ReviewMachineQuotaWindow(kind: "secondary", usedPercent: 42, remainingPercent: 58, windowDurationMinutes: 10_080, resetsAt: 1_800_604_800),
++        ]
++        let codex = ReviewMachineCodexMetrics(
++            version: "codex-cli 0.146.0",
++            model: "gpt-5.6-sol",
++            reasoningEffort: "high",
++            processRunning: true,
++            processCPUPercent: 25,
++            processMemoryBytes: 104_857_600,
++            threadID: "thread",
++            tokenUsage: nil,
++            quotaRemainingPercent: 58,
++            quotaAvailable: true,
++            quotaReason: "official snapshot",
++            quotaWindows: windows,
++            quotaResetPrediction: ReviewMachineQuotaPrediction(
++                predictedAt: 1_800_604_800,
++                windowKind: "secondary",
++                source: "official_schedule",
++                confidence: "high",
++                reason: "official resetsAt"
++            ),
++            usageDashboardURL: "https://chatgpt.com/codex/settings/usage"
++        )
++        let monitor = ReviewMachineMonitorSnapshot(
++            schemaVersion: 1,
++            sampledAt: "2027-01-15T08:00:00Z",
++            machine: machine,
++            worker: worker,
++            codex: codex,
++            news: nil,
++            job: nil,
++            stream: ReviewMachineLiveStream(
++                jobID: nil,
++                cursor: 0,
++                nextCursor: 0,
++                events: [],
++                truncatedBefore: false
++            )
++        )
++        return ReviewMachineStatusSnapshot(monitor: monitor, receivedAt: receivedAt)
++    }
++
++    private static func auditFrozenCache(at fileURL: URL) throws {
++        let store = ReviewMachineStatusStore(fileURL: fileURL)
++        let facade = ReviewMachineStatusLegacyFacade(legacyStore: store, mode: .shadow)
++        let snapshot = try require(facade.load(), "frozen review machine status missing")
++        let report = try require(facade.lastReport, "frozen review status report missing")
++        guard report.isEquivalent else {
++            throw NSError(domain: "NativeReviewMachineStatusFacadeSmoke", code: 2, userInfo: [NSLocalizedDescriptionKey: "unexplained frozen review status differences: \(report.unexplainedDifferences.count)"])
++        }
++        print(
++            "NativeReviewMachineStatusFacadeFrozenCache: PASS "
++                + "schema=\(snapshot.schemaVersion) "
++                + "active=\(snapshot.worker.activeJobCount > 0 || snapshot.codex.processRunning) "
++                + "differences=\(report.differences.count) "
++                + "unexplained=\(report.unexplainedDifferences.count)"
++        )
++    }
++
++    private static func require<Value>(_ value: Value?, _ message: String) throws -> Value {
++        guard let value else {
++            throw NSError(domain: "NativeReviewMachineStatusFacadeSmoke", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
++        }
++        return value
++    }
++}

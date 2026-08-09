@@ -1,0 +1,18 @@
+diff --git a/tests/NativeCodexSessionResolverSmoke.swift b/tests/NativeCodexSessionResolverSmoke.swift
+index 4f3bab12068b59bdb35ecd04e69ace72901aa00a..1cccaae3ee913930b8562341d8a36cc417e41f13 100644
+--- a/tests/NativeCodexSessionResolverSmoke.swift
++++ b/tests/NativeCodexSessionResolverSmoke.swift
+@@ -197,11 +197,11 @@ private struct NativeCodexSessionResolverSmoke {
+         let fakeRipgrep = """
+         #!/bin/sh
+         case "$*" in
+-          *'\(sessionsURL.path)'*) ;;
++          *'\(sessionsURL.standardizedFileURL.path)'*) ;;
+           *) exit 2 ;;
+         esac
+         case "$*" in
+-          *'\(archivedSessionsURL.path)'*) ;;
++          *'\(archivedSessionsURL.standardizedFileURL.path)'*) ;;
+           *) exit 2 ;;
+         esac
+         printf '%s\\n' '\(rolloutURL.path)'

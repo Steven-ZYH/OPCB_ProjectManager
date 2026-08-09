@@ -1598,7 +1598,7 @@ html>body{
 
   <header class="spb-topbar">
     <div class="spb-brand"><span class="spb-brand-mark" aria-hidden="true"></span>OPCB · Project Control</div>
-    <div>Desktop Control Blueprint · 2026-08-06</div>
+    <div>Desktop Control Blueprint · 2026-08-09</div>
   </header>
 
   <section class="spb-hero" aria-labelledby="spb-blueprint-title">
@@ -1789,9 +1789,42 @@ html>body{
   </section>
 
   <section class="spb-panel" data-spb-panel-content="roadmap" hidden>
+    <div class="card spb-phase-overview" aria-labelledby="spb-execution-snapshot-title">
+      <div class="spb-section-heading">
+        <h2 id="spb-execution-snapshot-title">执行状态快照</h2>
+        <span class="viz-badge">2026-08-09 · R01 基线模块已关闭</span>
+      </div>
+      <p>R01.1、R01.2 与 R01.3 的事实冻结、可重建行为基线、Legacy Facade/Shadow 以及从 live main 重建并安装验收已经闭环。正式 App 仍由 <code>legacyOnly</code> 路径驱动；这不是 R01.4 切流或旧编排退休完成。</p>
+      <div class="spb-phase-boundary">
+        <table>
+          <tbody>
+            <tr><th>关闭范围</th><td>R01 基线／Facade／候选安装模块；来源 <code>6f23f0b6015573632ed830f59cc943e80f8daa63</code>，安装验收 <code>INSTALLED-ACCEPTED</code>。</td></tr>
+            <tr><th>保留后续</th><td>R01.4 继续作为 P2–P4 的横向切流与旧编排退休门；必须随对应 Registry、事实、Session/PR/Roadmap 与命令模块逐项验收。</td></tr>
+            <tr><th>下一主阶段</th><td>P1 · 控制平面内核。先完成模块边界，再完成 Registry 持久化、状态归一化、SQLite 审计、Policy、Runtime Actor，最后迁移菜单栏读路径。</td></tr>
+            <tr><th>启动入口</th><td><code>evidence/P1/2026-08-09/P1-CONTROL-PLANE-KERNEL-START-HANDOFF.md</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="spb-section-heading">
+        <h3>重新评估后的 P1 顺序</h3>
+        <span class="text-muted">依赖优先；不把 UI、命令或切流提前</span>
+      </div>
+      <table class="spb-work-package-table">
+        <thead><tr><th>顺序</th><th>工作包</th><th>当前缺口</th><th>退出门</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>P1.2 · Swift Package 模块边界</td><td>当前只有 <code>ProjectControlDomain</code> target；Adapters、Store、Policy、AppUI 仍缺失。</td><td>依赖方向可测试，Domain 不依赖 AppKit/Process，旧 native build 继续通过。</td></tr>
+          <tr><td>2</td><td>P1.3 · Registry 持久化与校验</td><td>Schema/fixture 已有；原子 Store、迁移、健康检查与稳定项目顺序未完成。</td><td>跨 App/系统重启恢复；错误项目隔离；不保存 secret。</td></tr>
+          <tr><td>3</td><td>P1.4 · State Normalizer/Refresh</td><td><code>Observed</code> 合同已有；统一 generation、CAS、晚到保护与刷新所有权未完成。</td><td>旧响应不能覆盖新事实；partial/unknown 不被补成成功。</td></tr>
+          <tr><td>4</td><td>P1.5 · SQLite 事件账本</td><td>Audit envelope 已有；追加事件、物化视图、migration、rebuild 与 recovery 未完成。</td><td>投影可重建；崩溃窗口不产生“执行但无记录”。</td></tr>
+          <tr><td>5</td><td>P1.6 · Policy Engine</td><td>Policy refs 只有合同字段；缺少 allow/confirm/deny 矩阵、required facts 和反例测试。</td><td>未知动作/事实默认 deny；merge、deploy、secret-use 相互独立。</td></tr>
+          <tr><td>6</td><td>P1.7 · Runtime Actor</td><td>AppDelegate 仍拥有旧 timer/cache/provider 编排；缺少单一生命周期与连接所有权。</td><td>菜单栏和未来主窗口共享同一 projection，无双 timer/cache。</td></tr>
+          <tr><td>7</td><td>P1.8 + R01.4 首切片</td><td>六路 Facade 只有 <code>legacyOnly</code>/<code>shadow</code>，尚无生产读路径切换与退休记录。</td><td>一次只切一个只读切片；完整回归、安装候选和一个发布周期回退标记。</td></tr>
+        </tbody>
+      </table>
+    </div>
     <div class="spb-phase-nav" aria-label="实施阶段">
-      <button type="button" class="btn btn-primary" data-spb-phase="P0" aria-pressed="true">P0 · 可重建基线</button>
-      <button type="button" class="btn" data-spb-phase="P1" aria-pressed="false">P1 · 控制平面内核</button>
+      <button type="button" class="btn" data-spb-phase="P0" aria-pressed="false">P0 · 可重建基线</button>
+      <button type="button" class="btn btn-primary" data-spb-phase="P1" aria-pressed="true">P1 · 控制平面内核</button>
       <button type="button" class="btn" data-spb-phase="P2" aria-pressed="false">P2 · 只读桌面 V1</button>
       <button type="button" class="btn" data-spb-phase="P3" aria-pressed="false">P3 · Session/PR 控制</button>
       <button type="button" class="btn" data-spb-phase="P4" aria-pressed="false">P4 · Secret/环境</button>
@@ -2432,8 +2465,8 @@ html>body{
           renderTask(data.tasks[0]);
         });
       });
-      renderTasks(phaseData.P0.tasks);
-      renderTask(phaseData.P0.tasks[0]);
+      const initialPhaseButton = phaseButtons.find((button) => button.getAttribute('data-spb-phase') === 'P1');
+      initialPhaseButton?.click();
     })();
   </script>
 </div>

@@ -1,0 +1,741 @@
+diff --git a/Sources/ProjectControlDomain/Observed.swift b/Sources/ProjectControlDomain/Observed.swift
+index 87bd5ad4ffd2f985b8377eacbc03d38ac797e5e8..41fd707bb2da64e39ca3c01a4c7e708755dc15d4 100644
+--- a/Sources/ProjectControlDomain/Observed.swift
++++ b/Sources/ProjectControlDomain/Observed.swift
+@@ -12,6 +12,7 @@ public enum Freshness: String, Codable, CaseIterable, Sendable {
+ 
+ public enum ObservationFailureKind: String, Codable, Sendable {
+     case providerFailure
++    case invalidData
+     case unsupported
+     case missingEvidence
+     case timeout
+diff --git a/Sources/ProjectControlDomain/ShadowComparison.swift b/Sources/ProjectControlDomain/ShadowComparison.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..7f5c6635a14c68cfcc29b77d9fa48dae1614a612
+--- /dev/null
++++ b/Sources/ProjectControlDomain/ShadowComparison.swift
+@@ -0,0 +1,186 @@
++import Foundation
++
++public struct RoadmapProjectionItem: Codable, Equatable, Sendable {
++    public let id: String
++    public let code: String
++    public let title: String
++    public let statusText: String
++    public let stage: String
++    public let anchor: String?
++    public let pullRequestNumbers: [Int]
++
++    public init(id: String, code: String, title: String, statusText: String, stage: String, anchor: String?, pullRequestNumbers: [Int]) {
++        self.id = id
++        self.code = code
++        self.title = title
++        self.statusText = statusText
++        self.stage = stage
++        self.anchor = anchor
++        self.pullRequestNumbers = pullRequestNumbers
++    }
++}
++
++public struct RoadmapProjectionDocument: Codable, Equatable, Sendable {
++    public let id: String
++    public let path: String
++    public let title: String
++    public let updatedText: String?
++    public let items: [RoadmapProjectionItem]
++
++    public init(id: String, path: String, title: String, updatedText: String?, items: [RoadmapProjectionItem]) {
++        self.id = id
++        self.path = path
++        self.title = title
++        self.updatedText = updatedText
++        self.items = items
++    }
++}
++
++public struct RoadmapProjection: Codable, Equatable, Sendable {
++    public let repository: String
++    public let sourceSHA: String?
++    public let fetchedAt: Date
++    public let documents: [RoadmapProjectionDocument]
++
++    public init(repository: String, sourceSHA: String?, fetchedAt: Date, documents: [RoadmapProjectionDocument]) {
++        self.repository = repository
++        self.sourceSHA = sourceSHA
++        self.fetchedAt = fetchedAt
++        self.documents = documents
++    }
++
++    public func flattened() -> [String: ShadowFieldValue] {
++        var fields: [String: ShadowFieldValue] = [
++            "repository": .value(repository),
++            "sourceSHA": sourceSHA.map(ShadowFieldValue.value) ?? .missing,
++            "fetchedAt": .value(String(fetchedAt.timeIntervalSince1970)),
++            "documents.count": .value(String(documents.count)),
++        ]
++        for (documentIndex, document) in documents.enumerated() {
++            let prefix = "documents[\(documentIndex)]"
++            fields["\(prefix).id"] = .value(document.id)
++            fields["\(prefix).path"] = .value(document.path)
++            fields["\(prefix).title"] = .value(document.title)
++            fields["\(prefix).updatedText"] = document.updatedText.map(ShadowFieldValue.value) ?? .missing
++            fields["\(prefix).items.count"] = .value(String(document.items.count))
++            for (itemIndex, item) in document.items.enumerated() {
++                let itemPrefix = "\(prefix).items[\(itemIndex)]"
++                fields["\(itemPrefix).id"] = .value(item.id)
++                fields["\(itemPrefix).code"] = .value(item.code)
++                fields["\(itemPrefix).title"] = .value(item.title)
++                fields["\(itemPrefix).statusText"] = .value(item.statusText)
++                fields["\(itemPrefix).stage"] = .value(item.stage)
++                fields["\(itemPrefix).anchor"] = item.anchor.map(ShadowFieldValue.value) ?? .missing
++                fields["\(itemPrefix).pullRequestNumbers"] = .value(item.pullRequestNumbers.map(String.init).joined(separator: ","))
++            }
++        }
++        return fields
++    }
++}
++
++public enum ShadowFieldValue: Codable, Equatable, Sendable, CustomStringConvertible {
++    case value(String)
++    case missing
++
++    public var description: String {
++        switch self {
++        case .value(let value): return value
++        case .missing: return "<missing>"
++        }
++    }
++}
++
++public struct AllowedDifference: Codable, Equatable, Sendable {
++    public let fieldPath: String
++    public let reason: String
++
++    public init(fieldPath: String, reason: String) {
++        self.fieldPath = fieldPath
++        self.reason = reason
++    }
++}
++
++public struct ShadowDifference: Codable, Equatable, Sendable {
++    public let fieldPath: String
++    public let legacy: ShadowFieldValue
++    public let candidate: ShadowFieldValue
++    public let allowedReason: String?
++
++    public init(fieldPath: String, legacy: ShadowFieldValue, candidate: ShadowFieldValue, allowedReason: String?) {
++        self.fieldPath = fieldPath
++        self.legacy = legacy
++        self.candidate = candidate
++        self.allowedReason = allowedReason
++    }
++}
++
++public struct ShadowComparisonReport: Codable, Equatable, Sendable {
++    public let resource: ResourceRef
++    public let comparedAt: Date
++    public let differences: [ShadowDifference]
++    public let auditEvent: AuditEvent
++
++    public var unexplainedDifferences: [ShadowDifference] {
++        differences.filter { $0.allowedReason == nil }
++    }
++
++    public var isEquivalent: Bool { unexplainedDifferences.isEmpty }
++}
++
++public enum ShadowComparator {
++    public static func compare(
++        legacy: Observed<RoadmapProjection>,
++        candidate: Observed<RoadmapProjection>,
++        resource: ResourceRef,
++        comparedAt: Date,
++        allowedDifferences: [AllowedDifference] = []
++    ) throws -> ShadowComparisonReport {
++        try legacy.validate()
++        try candidate.validate()
++        var allowed: [String: String] = [:]
++        for difference in allowedDifferences {
++            guard allowed.updateValue(difference.reason, forKey: difference.fieldPath) == nil else {
++                throw DomainValidationError.duplicate("allowed difference \(difference.fieldPath)")
++            }
++        }
++        var legacyFields = legacy.value?.flattened() ?? [:]
++        var candidateFields = candidate.value?.flattened() ?? [:]
++        legacyFields["observation.source.system"] = .value(legacy.source.system)
++        candidateFields["observation.source.system"] = .value(candidate.source.system)
++        legacyFields["observation.source.locator"] = .value(legacy.source.locator)
++        candidateFields["observation.source.locator"] = .value(candidate.source.locator)
++        legacyFields["observation.observedAt"] = .value(String(legacy.observedAt.timeIntervalSince1970))
++        candidateFields["observation.observedAt"] = .value(String(candidate.observedAt.timeIntervalSince1970))
++        legacyFields["observation.expiresAt"] = legacy.expiresAt.map { .value(String($0.timeIntervalSince1970)) } ?? .missing
++        candidateFields["observation.expiresAt"] = candidate.expiresAt.map { .value(String($0.timeIntervalSince1970)) } ?? .missing
++        legacyFields["observation.generation"] = .value(String(legacy.generation))
++        candidateFields["observation.generation"] = .value(String(candidate.generation))
++        legacyFields["observation.freshness"] = .value(legacy.freshness.rawValue)
++        candidateFields["observation.freshness"] = .value(candidate.freshness.rawValue)
++        legacyFields["observation.errorKind"] = legacy.error.map { .value($0.kind.rawValue) } ?? .missing
++        candidateFields["observation.errorKind"] = candidate.error.map { .value($0.kind.rawValue) } ?? .missing
++
++        let keys = Set(legacyFields.keys).union(candidateFields.keys).sorted()
++        let differences = keys.compactMap { key -> ShadowDifference? in
++            let old = legacyFields[key] ?? .missing
++            let new = candidateFields[key] ?? .missing
++            guard old != new else { return nil }
++            return ShadowDifference(fieldPath: key, legacy: old, candidate: new, allowedReason: allowed[key])
++        }
++        let event = AuditEvent(
++            eventID: UUID(),
++            projectID: ProjectID(rawValue: "opcb"),
++            resource: resource,
++            category: .verification,
++            source: SourceRef(system: "legacy-facade", locator: "roadmap-cache-shadow-v1"),
++            observedAt: comparedAt,
++            generation: max(legacy.generation, candidate.generation),
++            attributes: [
++                "differenceCount": String(differences.count),
++                "unexplainedDifferenceCount": String(differences.filter { $0.allowedReason == nil }.count),
++            ]
++        )
++        try event.validate()
++        return ShadowComparisonReport(resource: resource, comparedAt: comparedAt, differences: differences, auditEvent: event)
++    }
++}
+diff --git a/build-native.sh b/build-native.sh
+index 969bc9bb62510fa3a9edf6451c59b185334a185b..fc8f22f89028598f66e5845f32b80614e91b786f 100755
+--- a/build-native.sh
++++ b/build-native.sh
+@@ -38,6 +38,10 @@ TMPDIR="$compiler_tmp" \
+   -framework Foundation \
+   -framework CoreText \
+   -o "$app_dir/Contents/MacOS/SIXLABPRControl" \
++  "$project_dir/Sources/ProjectControlDomain/Identity.swift" \
++  "$project_dir/Sources/ProjectControlDomain/AuditEvent.swift" \
++  "$project_dir/Sources/ProjectControlDomain/Observed.swift" \
++  "$project_dir/Sources/ProjectControlDomain/ShadowComparison.swift" \
+   "$project_dir/native/Models.swift" \
+   "$project_dir/native/CodexSessionResolver.swift" \
+   "$project_dir/native/ReviewMachineSSH.swift" \
+@@ -45,6 +49,7 @@ TMPDIR="$compiler_tmp" \
+   "$project_dir/native/AppTheme.swift" \
+   "$project_dir/native/GitHubClient.swift" \
+   "$project_dir/native/RoadmapClient.swift" \
++  "$project_dir/native/RoadmapLegacyFacade.swift" \
+   "$project_dir/native/DashboardViewController.swift" \
+   "$project_dir/native/AppDelegate.swift"
+ 
+diff --git a/native/AppDelegate.swift b/native/AppDelegate.swift
+index acd6251e96229191259032f76e359bc972b2204b..c5a7137aba23a4d80f2826cdcfc0e6d1c80b2904 100644
+--- a/native/AppDelegate.swift
++++ b/native/AppDelegate.swift
+@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+     private let reviewMachineQueue = ReviewMachineQueueClient()
+     private let roadmapClient = RoadmapClient()
+     private let roadmapStore = RoadmapStore()
++    private lazy var roadmapFacade = RoadmapLegacyFacade(legacyStore: roadmapStore)
+     private let popover = NSPopover()
+     private var statusItem: NSStatusItem!
+     private var dashboard: DashboardViewController!
+@@ -63,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+         setupStatusItem()
+         setupDashboard()
+         showStoredSnapshot(for: selectedProject)
+-        roadmapSnapshot = roadmapStore.load()
++        roadmapSnapshot = roadmapFacade.load()
+         if let roadmapSnapshot {
+             dashboard.updateRoadmaps(roadmapSnapshot)
+         }
+@@ -801,7 +802,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+     }
+ 
+     private func selectRoadmaps() {
+-        let snapshot = roadmapSnapshot ?? roadmapStore.load()
++        let snapshot = roadmapSnapshot ?? roadmapFacade.load()
+         if roadmapSnapshot == nil {
+             roadmapSnapshot = snapshot
+         }
+@@ -816,7 +817,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+         guard !roadmapRefreshInProgress else { return }
+         if !force,
+            let fetchedAt = roadmapSnapshot?.fetchedAt
+-                ?? roadmapStore.load()?.fetchedAt,
++                ?? roadmapFacade.load()?.fetchedAt,
+            Date().timeIntervalSince(fetchedAt) < Self.roadmapFreshness
+         {
+             return
+@@ -837,7 +838,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+             case .failure(let error):
+                 let message = error.localizedDescription
+                 self.roadmapError = message
+-                if let cached = self.roadmapSnapshot ?? self.roadmapStore.load() {
++                if let cached = self.roadmapSnapshot ?? self.roadmapFacade.load() {
+                     self.roadmapSnapshot = cached
+                     self.roadmapOffline = true
+                     self.dashboard.showRoadmapsIfVisible(
+diff --git a/native/RoadmapClient.swift b/native/RoadmapClient.swift
+index 9368cd4ba0537ce318fb1d6d8d07e6d744882416..571fe10d5472271f7dffddc886bfb7c7263042ac 100644
+--- a/native/RoadmapClient.swift
++++ b/native/RoadmapClient.swift
+@@ -498,6 +498,8 @@ final class RoadmapStore {
+         }
+     }
+ 
++    var storageURL: URL? { fileURL }
++
+     func save(_ snapshot: RoadmapSnapshot) {
+         guard let fileURL, let data = try? encoder.encode(snapshot) else {
+             return
+diff --git a/native/RoadmapLegacyFacade.swift b/native/RoadmapLegacyFacade.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..609f4d9418a2e38cbf5f3f0474749019d9f43136
+--- /dev/null
++++ b/native/RoadmapLegacyFacade.swift
+@@ -0,0 +1,226 @@
++import Foundation
++
++enum LegacyFacadeMode: Equatable {
++    case legacyOnly
++    case shadow
++
++    static func from(environment: [String: String] = ProcessInfo.processInfo.environment) -> LegacyFacadeMode {
++        environment["OPCB_ROADMAP_FACADE_MODE"]?.lowercased() == "shadow" ? .shadow : .legacyOnly
++    }
++}
++
++private struct RoadmapCacheV1: Decodable {
++    struct Document: Decodable {
++        struct Item: Decodable {
++            let id: String
++            let code: String
++            let title: String
++            let statusText: String
++            let stage: String
++            let anchor: String?
++            let pullRequestNumbers: [Int]
++        }
++
++        let id: String
++        let path: String
++        let title: String
++        let updatedText: String?
++        let items: [Item]
++    }
++
++    let repository: String
++    let sourceSHA: String?
++    let fetchedAt: Date
++    let documents: [Document]
++
++    var projection: RoadmapProjection {
++        RoadmapProjection(
++            repository: repository,
++            sourceSHA: sourceSHA,
++            fetchedAt: fetchedAt,
++            documents: documents.map { document in
++                RoadmapProjectionDocument(
++                    id: document.id,
++                    path: document.path,
++                    title: document.title,
++                    updatedText: document.updatedText,
++                    items: document.items.map { item in
++                        RoadmapProjectionItem(
++                            id: item.id,
++                            code: item.code,
++                            title: item.title,
++                            statusText: item.statusText,
++                            stage: item.stage,
++                            anchor: item.anchor,
++                            pullRequestNumbers: item.pullRequestNumbers
++                        )
++                    }
++                )
++            }
++        )
++    }
++}
++
++final class RoadmapCacheV1Adapter {
++    private let fileURL: URL?
++    private let ttl: TimeInterval
++
++    init(fileURL: URL?, ttl: TimeInterval = 30 * 60) {
++        self.fileURL = fileURL
++        self.ttl = ttl
++    }
++
++    func load(now: Date = Date()) -> Observed<RoadmapProjection> {
++        let source = SourceRef(system: "roadmap-cache-v1", locator: fileURL?.path ?? "unavailable")
++        guard let fileURL else {
++            return Observed(
++                value: nil,
++                source: source,
++                observedAt: now,
++                expiresAt: nil,
++                generation: 0,
++                freshness: .unknown,
++                error: ObservationFailure(kind: .unsupported, message: "application support directory unavailable")
++            )
++        }
++        let data: Data
++        do {
++            data = try Data(contentsOf: fileURL)
++        } catch {
++            return Observed(
++                value: nil,
++                source: source,
++                observedAt: now,
++                expiresAt: nil,
++                generation: 0,
++                freshness: .unknown,
++                error: ObservationFailure(kind: .missingEvidence, message: "roadmap cache has not been observed")
++            )
++        }
++        do {
++            let decoder = JSONDecoder()
++            decoder.dateDecodingStrategy = .iso8601
++            let value = try decoder.decode(RoadmapCacheV1.self, from: data).projection
++            let expiresAt = value.fetchedAt.addingTimeInterval(ttl)
++            return Observed(
++                value: value,
++                source: source,
++                observedAt: value.fetchedAt,
++                expiresAt: expiresAt,
++                generation: UInt64(max(0, value.fetchedAt.timeIntervalSince1970)),
++                freshness: now >= expiresAt ? .stale : .cached
++            )
++        } catch {
++            return Observed(
++                value: nil,
++                source: source,
++                observedAt: now,
++                expiresAt: nil,
++                generation: 0,
++                freshness: .unreachable,
++                error: ObservationFailure(kind: .invalidData, message: "roadmap cache decode failed")
++            )
++        }
++    }
++}
++
++final class RoadmapLegacyFacade {
++    private let legacyStore: RoadmapStore
++    private let adapter: RoadmapCacheV1Adapter
++    private(set) var lastReport: ShadowComparisonReport?
++    private(set) var comparisonError: String?
++    var mode: LegacyFacadeMode
++
++    init(legacyStore: RoadmapStore, mode: LegacyFacadeMode = .from()) {
++        self.legacyStore = legacyStore
++        self.adapter = RoadmapCacheV1Adapter(fileURL: legacyStore.storageURL)
++        self.mode = mode
++    }
++
++    func load(now: Date = Date()) -> RoadmapSnapshot? {
++        let legacy = legacyStore.load()
++        guard mode == .shadow else {
++            lastReport = nil
++            comparisonError = nil
++            return legacy
++        }
++
++        do {
++            lastReport = try ShadowComparator.compare(
++                legacy: observeLegacy(legacy, now: now),
++                candidate: adapter.load(now: now),
++                resource: ResourceRef(kind: "roadmap-cache", identifier: "roadmaps.json"),
++                comparedAt: now,
++                allowedDifferences: [
++                    AllowedDifference(
++                        fieldPath: "observation.source.system",
++                        reason: "legacy and v1 adapters have intentionally distinct source identities"
++                    )
++                ]
++            )
++            comparisonError = nil
++            if let report = lastReport {
++                let paths = report.differences.map(\.fieldPath).joined(separator: ",")
++                NSLog(
++                    "OPCB_R01_ROADMAP_SHADOW differences=%d unexplained=%d fields=%@",
++                    report.differences.count,
++                    report.unexplainedDifferences.count,
++                    paths
++                )
++            }
++        } catch {
++            lastReport = nil
++            comparisonError = String(describing: error)
++            NSLog("OPCB_R01_ROADMAP_SHADOW comparison_error=%@", String(describing: error))
++        }
++        return legacy
++    }
++
++    private func observeLegacy(_ snapshot: RoadmapSnapshot?, now: Date) -> Observed<RoadmapProjection> {
++        let source = SourceRef(system: "legacy-roadmap-store", locator: legacyStore.storageURL?.path ?? "unavailable")
++        guard let snapshot else {
++            return Observed(
++                value: nil,
++                source: source,
++                observedAt: now,
++                expiresAt: nil,
++                generation: 0,
++                freshness: .unknown,
++                error: ObservationFailure(kind: .missingEvidence, message: "legacy cache returned no snapshot")
++            )
++        }
++        let projection = RoadmapProjection(
++            repository: snapshot.repository,
++            sourceSHA: snapshot.sourceSHA,
++            fetchedAt: snapshot.fetchedAt,
++            documents: snapshot.documents.map { document in
++                RoadmapProjectionDocument(
++                    id: document.id,
++                    path: document.path,
++                    title: document.title,
++                    updatedText: document.updatedText,
++                    items: document.items.map { item in
++                        RoadmapProjectionItem(
++                            id: item.id,
++                            code: item.code,
++                            title: item.title,
++                            statusText: item.statusText,
++                            stage: item.stage.rawValue,
++                            anchor: item.anchor,
++                            pullRequestNumbers: item.pullRequestNumbers
++                        )
++                    }
++                )
++            }
++        )
++        let expiresAt = snapshot.fetchedAt.addingTimeInterval(30 * 60)
++        return Observed(
++            value: projection,
++            source: source,
++            observedAt: snapshot.fetchedAt,
++            expiresAt: expiresAt,
++            generation: UInt64(max(0, snapshot.fetchedAt.timeIntervalSince1970)),
++            freshness: now >= expiresAt ? .stale : .cached
++        )
++    }
++}
+diff --git a/test-native.sh b/test-native.sh
+index f6facbe73c1d1d4bddf684c05625afe85b9a801e..d649ec531bd01f8c6b4aa8a7bea6775f42370bb4 100755
+--- a/test-native.sh
++++ b/test-native.sh
+@@ -20,6 +20,10 @@ if [ ! -x "$swiftc_bin" ] || [ ! -x "$python3_bin" ] || [ ! -d "$sdk_path" ]; th
+ fi
+ 
+ sources=(
++  "$project_dir/Sources/ProjectControlDomain/Identity.swift"
++  "$project_dir/Sources/ProjectControlDomain/AuditEvent.swift"
++  "$project_dir/Sources/ProjectControlDomain/Observed.swift"
++  "$project_dir/Sources/ProjectControlDomain/ShadowComparison.swift"
+   "$project_dir/native/Models.swift"
+   "$project_dir/native/CodexSessionResolver.swift"
+   "$project_dir/native/ReviewMachineSSH.swift"
+@@ -27,6 +31,7 @@ sources=(
+   "$project_dir/native/AppTheme.swift"
+   "$project_dir/native/GitHubClient.swift"
+   "$project_dir/native/RoadmapClient.swift"
++  "$project_dir/native/RoadmapLegacyFacade.swift"
+   "$project_dir/native/DashboardViewController.swift"
+ )
+ 
+@@ -40,6 +45,7 @@ tests=(
+   NativeReviewMachineSSHSmoke
+   NativeReviewMachineQueueSmoke
+   NativeRoadmapSmoke
++  NativeRoadmapFacadeSmoke
+   NativeDashboardRender
+   NativePRDetailRender
+ )
+diff --git a/tests/NativeRoadmapFacadeSmoke.swift b/tests/NativeRoadmapFacadeSmoke.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..5a13a022c52a90dd60f7f10892b081a73acebb0b
+--- /dev/null
++++ b/tests/NativeRoadmapFacadeSmoke.swift
+@@ -0,0 +1,104 @@
++import Foundation
++
++@main
++private struct NativeRoadmapFacadeSmoke {
++    static func main() throws {
++        if CommandLine.arguments.count == 2 {
++            try auditFrozenCache(at: URL(fileURLWithPath: CommandLine.arguments[1]))
++            return
++        }
++        let directory = FileManager.default.temporaryDirectory
++            .appendingPathComponent(UUID().uuidString, isDirectory: true)
++        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
++        defer { try? FileManager.default.removeItem(at: directory) }
++
++        let fileURL = directory.appendingPathComponent("roadmaps.json")
++        let snapshot = RoadmapSnapshot(
++            repository: "Steven-ZYH/sixlab",
++            sourceSHA: String(repeating: "a", count: 40),
++            fetchedAt: Date(timeIntervalSince1970: 1_800_000_000),
++            documents: [
++                RoadmapDocument(
++                    id: "docs/roadmap.md",
++                    path: "docs/roadmap.md",
++                    title: "Roadmap",
++                    updatedText: nil,
++                    items: [
++                        RoadmapItem(
++                            id: "task-0",
++                            code: "TODO",
++                            title: "Preserve unknown",
++                            statusText: "待推进",
++                            stage: .unknown,
++                            anchor: nil,
++                            pullRequestNumbers: []
++                        )
++                    ]
++                )
++            ]
++        )
++        let store = RoadmapStore(fileURL: fileURL)
++        store.save(snapshot)
++
++        let legacyOnly = RoadmapLegacyFacade(legacyStore: store, mode: .legacyOnly)
++        precondition(legacyOnly.load() == snapshot)
++        precondition(legacyOnly.lastReport == nil)
++        precondition(legacyOnly.comparisonError == nil)
++
++        let shadow = RoadmapLegacyFacade(legacyStore: store, mode: .shadow)
++        let result = shadow.load(now: Date(timeIntervalSince1970: 1_800_000_100))
++        precondition(result == snapshot, "shadow mode must return the legacy value")
++        let report = try require(shadow.lastReport, "shadow report missing")
++        precondition(shadow.comparisonError == nil)
++        precondition(report.isEquivalent)
++        precondition(report.differences.count == 1)
++        precondition(report.differences[0].fieldPath == "observation.source.system")
++        precondition(report.differences[0].allowedReason != nil)
++        precondition(report.auditEvent.category == .verification)
++        precondition(report.auditEvent.attributes["unexplainedDifferenceCount"] == "0")
++
++        try Data("not-json".utf8).write(to: fileURL)
++        let corruptResult = shadow.load(now: Date(timeIntervalSince1970: 1_800_000_200))
++        precondition(corruptResult == nil, "legacy failure must not be filled as an empty snapshot")
++        let corruptReport = try require(shadow.lastReport, "corrupt shadow report missing")
++        precondition(!corruptReport.isEquivalent)
++        precondition(corruptReport.unexplainedDifferences.contains {
++            $0.fieldPath == "observation.freshness"
++                && $0.legacy == .value(Freshness.unknown.rawValue)
++                && $0.candidate == .value(Freshness.unreachable.rawValue)
++        })
++
++        precondition(LegacyFacadeMode.from(environment: [:]) == .legacyOnly)
++        precondition(LegacyFacadeMode.from(environment: ["OPCB_ROADMAP_FACADE_MODE": "shadow"]) == .shadow)
++        print("NativeRoadmapFacadeSmoke: PASS")
++    }
++
++    private static func auditFrozenCache(at fileURL: URL) throws {
++        let store = RoadmapStore(fileURL: fileURL)
++        let facade = RoadmapLegacyFacade(legacyStore: store, mode: .shadow)
++        let snapshot = try require(facade.load(), "frozen cache did not produce a legacy snapshot")
++        let report = try require(facade.lastReport, "frozen cache shadow report missing")
++        guard report.isEquivalent else {
++            let paths = report.unexplainedDifferences.map(\.fieldPath).joined(separator: ",")
++            throw NSError(
++                domain: "NativeRoadmapFacadeSmoke",
++                code: 2,
++                userInfo: [NSLocalizedDescriptionKey: "unexplained shadow differences: \(paths)"]
++            )
++        }
++        print(
++            "NativeRoadmapFacadeFrozenCache: PASS "
++                + "documents=\(snapshot.documents.count) "
++                + "items=\(snapshot.itemCount) "
++                + "differences=\(report.differences.count) "
++                + "unexplained=\(report.unexplainedDifferences.count)"
++        )
++    }
++
++    private static func require<Value>(_ value: Value?, _ message: String) throws -> Value {
++        guard let value else {
++            throw NSError(domain: "NativeRoadmapFacadeSmoke", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
++        }
++        return value
++    }
++}
+diff --git a/tests/ProjectControlDomainTests/ShadowComparisonTests.swift b/tests/ProjectControlDomainTests/ShadowComparisonTests.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..69ce21732298a383ed3b6caae70cf826f155ab24
+--- /dev/null
++++ b/tests/ProjectControlDomainTests/ShadowComparisonTests.swift
+@@ -0,0 +1,74 @@
++import XCTest
++@testable import ProjectControlDomain
++
++final class ShadowComparisonTests: XCTestCase {
++    private let source = SourceRef(system: "fixture", locator: "roadmaps.json")
++
++    private func projection(title: String = "Roadmap", sourceSHA: String? = nil) -> RoadmapProjection {
++        RoadmapProjection(
++            repository: "Steven-ZYH/sixlab",
++            sourceSHA: sourceSHA,
++            fetchedAt: Date(timeIntervalSince1970: 100),
++            documents: [RoadmapProjectionDocument(id: "docs/roadmap.md", path: "docs/roadmap.md", title: title, updatedText: nil, items: [])]
++        )
++    }
++
++    private func observed(_ projection: RoadmapProjection) -> Observed<RoadmapProjection> {
++        Observed(value: projection, source: source, observedAt: projection.fetchedAt, expiresAt: Date(timeIntervalSince1970: 200), generation: 1, freshness: .cached)
++    }
++
++    func testEquivalentSnapshotsHaveNoDifferences() throws {
++        let value = observed(projection())
++        let report = try ShadowComparator.compare(
++            legacy: value,
++            candidate: value,
++            resource: ResourceRef(kind: "roadmap-cache", identifier: "roadmaps.json"),
++            comparedAt: Date(timeIntervalSince1970: 150)
++        )
++        XCTAssertTrue(report.isEquivalent)
++        XCTAssertTrue(report.differences.isEmpty)
++        XCTAssertEqual(report.auditEvent.category, .verification)
++    }
++
++    func testFieldDifferenceIsUnexplainedUnlessExplicitlyAllowed() throws {
++        let old = observed(projection(title: "Old"))
++        let new = observed(projection(title: "New"))
++        let resource = ResourceRef(kind: "roadmap-cache", identifier: "roadmaps.json")
++        let unexplained = try ShadowComparator.compare(legacy: old, candidate: new, resource: resource, comparedAt: Date(timeIntervalSince1970: 150))
++        XCTAssertEqual(unexplained.unexplainedDifferences.map(\.fieldPath), ["documents[0].title"])
++
++        let allowed = try ShadowComparator.compare(
++            legacy: old,
++            candidate: new,
++            resource: resource,
++            comparedAt: Date(timeIntervalSince1970: 150),
++            allowedDifferences: [AllowedDifference(fieldPath: "documents[0].title", reason: "fixture rename")]
++        )
++        XCTAssertTrue(allowed.isEquivalent)
++        XCTAssertEqual(allowed.differences.first?.allowedReason, "fixture rename")
++    }
++
++    func testMissingSourceSHAStaysMissing() {
++        let missing = projection(sourceSHA: nil).flattened()
++        XCTAssertEqual(missing["sourceSHA"], .missing)
++        XCTAssertNotEqual(missing["sourceSHA"], .value(""))
++    }
++
++    func testDuplicateAllowedDifferenceRulesFailClosed() {
++        let value = observed(projection())
++        XCTAssertThrowsError(
++            try ShadowComparator.compare(
++                legacy: value,
++                candidate: value,
++                resource: ResourceRef(kind: "roadmap-cache", identifier: "roadmaps.json"),
++                comparedAt: Date(timeIntervalSince1970: 150),
++                allowedDifferences: [
++                    AllowedDifference(fieldPath: "repository", reason: "one"),
++                    AllowedDifference(fieldPath: "repository", reason: "two"),
++                ]
++            )
++        ) { error in
++            XCTAssertEqual(error as? DomainValidationError, .duplicate("allowed difference repository"))
++        }
++    }
++}

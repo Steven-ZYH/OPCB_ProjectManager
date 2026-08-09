@@ -1,0 +1,964 @@
+diff --git a/.gitignore b/.gitignore
+index 11def83bbee0079cf1e548401e951ff69be0f46e..3932f850dbe08625d47083d04224a18f59d392ea 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,4 @@
+ .DS_Store
+ *.swp
+ build/
++.build/
+diff --git a/Package.swift b/Package.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..2ac7168948f0c02bc8ddca3b104cfa91f51bc67e
+--- /dev/null
++++ b/Package.swift
+@@ -0,0 +1,19 @@
++// swift-tools-version: 5.9
++
++import PackageDescription
++
++let package = Package(
++    name: "ProjectControlDomain",
++    platforms: [.macOS(.v13)],
++    products: [
++        .library(name: "ProjectControlDomain", targets: ["ProjectControlDomain"]),
++    ],
++    targets: [
++        .target(name: "ProjectControlDomain"),
++        .testTarget(
++            name: "ProjectControlDomainTests",
++            dependencies: ["ProjectControlDomain"],
++            resources: [.process("Fixtures")]
++        ),
++    ]
++)
+diff --git a/Sources/ProjectControlDomain/AuditEvent.swift b/Sources/ProjectControlDomain/AuditEvent.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..659f9302d60a33cf699a8d72b8cfa9feee0dcec4
+--- /dev/null
++++ b/Sources/ProjectControlDomain/AuditEvent.swift
+@@ -0,0 +1,97 @@
++import Foundation
++
++public enum AuditCategory: String, Codable, CaseIterable, Sendable {
++    case observation
++    case claim
++    case intent
++    case confirmation
++    case execution
++    case verification
++    case correction
++}
++
++public struct AuditActor: Codable, Equatable, Sendable {
++    public let kind: String
++    public let identifier: String
++
++    public init(kind: String, identifier: String) {
++        self.kind = kind
++        self.identifier = identifier
++    }
++}
++
++public struct AuditEvent: Codable, Equatable, Sendable {
++    public let eventID: UUID
++    public let projectID: ProjectID
++    public let resource: ResourceRef
++    public let category: AuditCategory
++    public let source: SourceRef
++    public let observedAt: Date
++    public let generation: UInt64
++    public let actor: AuditActor?
++    public let commandID: UUID?
++    public let evidence: [EvidenceRef]
++    public let attributes: [String: String]
++
++    public init(
++        eventID: UUID,
++        projectID: ProjectID,
++        resource: ResourceRef,
++        category: AuditCategory,
++        source: SourceRef,
++        observedAt: Date,
++        generation: UInt64,
++        actor: AuditActor? = nil,
++        commandID: UUID? = nil,
++        evidence: [EvidenceRef] = [],
++        attributes: [String: String] = [:]
++    ) {
++        self.eventID = eventID
++        self.projectID = projectID
++        self.resource = resource
++        self.category = category
++        self.source = source
++        self.observedAt = observedAt
++        self.generation = generation
++        self.actor = actor
++        self.commandID = commandID
++        self.evidence = evidence
++        self.attributes = attributes
++    }
++
++    public var deduplicationKey: String {
++        eventID.uuidString.lowercased()
++    }
++
++    public func validate() throws {
++        try projectID.validate()
++        try resource.validate()
++        try source.validate()
++        let forbidden = Set(["secret", "password", "token", "authorization", "hiddenreasoning", "chainofthought"])
++        let violations = attributes.keys.filter { forbidden.contains($0.lowercased()) }
++        guard violations.isEmpty else {
++            throw DomainValidationError.privacyViolation("audit attributes contain forbidden keys: \(violations.sorted().joined(separator: ", "))")
++        }
++        if category == .execution || category == .confirmation {
++            guard commandID != nil else {
++                throw DomainValidationError.missing("commandID for \(category.rawValue)")
++            }
++        }
++    }
++}
++
++public enum AuditOrdering: Equatable {
++    case newer
++    case duplicate
++    case late
++    case conflict
++
++    public static func compare(candidate: AuditEvent, against current: AuditEvent) -> AuditOrdering {
++        if candidate.eventID == current.eventID { return .duplicate }
++        if candidate.generation > current.generation { return .newer }
++        if candidate.generation < current.generation { return .late }
++        if candidate.observedAt > current.observedAt { return .newer }
++        if candidate.observedAt < current.observedAt { return .late }
++        return .conflict
++    }
++}
+diff --git a/Sources/ProjectControlDomain/Identity.swift b/Sources/ProjectControlDomain/Identity.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..1fec404d01f07bcbce4a71cbd3bad6be6a7e52d8
+--- /dev/null
++++ b/Sources/ProjectControlDomain/Identity.swift
+@@ -0,0 +1,93 @@
++import Foundation
++
++public struct ProjectID: Codable, Equatable, Hashable, Sendable, RawRepresentable {
++    public let rawValue: String
++
++    public init(rawValue: String) {
++        self.rawValue = rawValue
++    }
++
++    public func validate() throws {
++        guard !rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
++            throw DomainValidationError.invalidProjectID("projectID must not be empty")
++        }
++        guard !rawValue.hasPrefix("/"), !rawValue.hasPrefix("~"), !rawValue.contains("\\") else {
++            throw DomainValidationError.invalidProjectID("projectID must be a stable identifier, not a filesystem path")
++        }
++        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
++        guard rawValue.unicodeScalars.allSatisfy(allowed.contains) else {
++            throw DomainValidationError.invalidProjectID("projectID contains unsupported characters")
++        }
++    }
++}
++
++public struct ResourceRef: Codable, Equatable, Hashable, Sendable {
++    public let kind: String
++    public let identifier: String
++
++    public init(kind: String, identifier: String) {
++        self.kind = kind
++        self.identifier = identifier
++    }
++
++    public func validate() throws {
++        try requireNonEmpty(kind, field: "resource.kind")
++        try requireNonEmpty(identifier, field: "resource.identifier")
++    }
++}
++
++public struct SourceRef: Codable, Equatable, Hashable, Sendable {
++    public let system: String
++    public let locator: String
++
++    public init(system: String, locator: String) {
++        self.system = system
++        self.locator = locator
++    }
++
++    public func validate() throws {
++        try requireNonEmpty(system, field: "source.system")
++        try requireNonEmpty(locator, field: "source.locator")
++    }
++}
++
++public struct EvidenceRef: Codable, Equatable, Hashable, Sendable {
++    public let kind: String
++    public let locator: String
++    public let sha256: String?
++
++    public init(kind: String, locator: String, sha256: String? = nil) {
++        self.kind = kind
++        self.locator = locator
++        self.sha256 = sha256
++    }
++}
++
++public enum DomainValidationError: Error, Equatable, CustomStringConvertible {
++    case missing(String)
++    case invalidProjectID(String)
++    case unsupportedSchemaVersion(Int)
++    case unknownFields([String])
++    case duplicate(String)
++    case invalidState(String)
++    case privacyViolation(String)
++
++    public var description: String {
++        switch self {
++        case .missing(let field): return "Missing required field: \(field)"
++        case .invalidProjectID(let reason): return reason
++        case .unsupportedSchemaVersion(let version): return "Unsupported schema version: \(version)"
++        case .unknownFields(let fields): return "Unknown fields: \(fields.sorted().joined(separator: ", "))"
++        case .duplicate(let value): return "Duplicate value: \(value)"
++        case .invalidState(let reason): return reason
++        case .privacyViolation(let reason): return reason
++        }
++    }
++}
++
++@inline(__always)
++func requireNonEmpty(_ value: String, field: String) throws {
++    guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
++        throw DomainValidationError.missing(field)
++    }
++}
+diff --git a/Sources/ProjectControlDomain/Observed.swift b/Sources/ProjectControlDomain/Observed.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..87bd5ad4ffd2f985b8377eacbc03d38ac797e5e8
+--- /dev/null
++++ b/Sources/ProjectControlDomain/Observed.swift
+@@ -0,0 +1,116 @@
++import Foundation
++
++public enum Freshness: String, Codable, CaseIterable, Sendable {
++    case live
++    case cached
++    case fetching
++    case stale
++    case unreachable
++    case partial
++    case unknown
++}
++
++public enum ObservationFailureKind: String, Codable, Sendable {
++    case providerFailure
++    case unsupported
++    case missingEvidence
++    case timeout
++    case offline
++}
++
++public struct ObservationFailure: Codable, Equatable, Sendable {
++    public let kind: ObservationFailureKind
++    public let message: String
++
++    public init(kind: ObservationFailureKind, message: String) {
++        self.kind = kind
++        self.message = message
++    }
++}
++
++public struct Observed<Value: Codable & Equatable & Sendable>: Codable, Equatable, Sendable {
++    public let value: Value?
++    public let source: SourceRef
++    public let observedAt: Date
++    public let expiresAt: Date?
++    public let generation: UInt64
++    public let freshness: Freshness
++    public let error: ObservationFailure?
++
++    public init(
++        value: Value?,
++        source: SourceRef,
++        observedAt: Date,
++        expiresAt: Date?,
++        generation: UInt64,
++        freshness: Freshness,
++        error: ObservationFailure? = nil
++    ) {
++        self.value = value
++        self.source = source
++        self.observedAt = observedAt
++        self.expiresAt = expiresAt
++        self.generation = generation
++        self.freshness = freshness
++        self.error = error
++    }
++
++    public func validate() throws {
++        try source.validate()
++        switch freshness {
++        case .live, .cached:
++            guard value != nil else { throw DomainValidationError.invalidState("\(freshness.rawValue) requires an observed value") }
++            guard expiresAt != nil else { throw DomainValidationError.invalidState("\(freshness.rawValue) requires expiresAt") }
++            guard error == nil else { throw DomainValidationError.invalidState("\(freshness.rawValue) cannot be healthy while carrying an error") }
++        case .stale, .partial:
++            guard value != nil else { throw DomainValidationError.invalidState("\(freshness.rawValue) requires a retained value") }
++        case .unreachable:
++            guard error != nil else { throw DomainValidationError.invalidState("unreachable requires an explicit failure") }
++        case .unknown:
++            guard value == nil else { throw DomainValidationError.invalidState("unknown cannot imply a value") }
++            guard error?.kind == .missingEvidence || error?.kind == .unsupported else {
++                throw DomainValidationError.invalidState("unknown requires missing-evidence or unsupported reason")
++            }
++        case .fetching:
++            break
++        }
++    }
++
++    public func evaluated(at now: Date) -> Observed<Value> {
++        guard (freshness == .live || freshness == .cached), let expiresAt, now >= expiresAt else {
++            return self
++        }
++        return Observed(
++            value: value,
++            source: source,
++            observedAt: observedAt,
++            expiresAt: expiresAt,
++            generation: generation,
++            freshness: .stale,
++            error: error
++        )
++    }
++}
++
++public enum ObservationMergeResult<Value: Codable & Equatable & Sendable>: Equatable, Sendable {
++    case accepted(Observed<Value>)
++    case duplicate
++    case droppedLate
++    case conflict
++}
++
++public enum ObservationMerger {
++    public static func merge<Value>(
++        current: Observed<Value>,
++        candidate: Observed<Value>
++    ) throws -> ObservationMergeResult<Value> where Value: Codable & Equatable & Sendable {
++        try current.validate()
++        try candidate.validate()
++        if candidate == current { return .duplicate }
++        if candidate.generation > current.generation { return .accepted(candidate) }
++        if candidate.generation < current.generation { return .droppedLate }
++        if candidate.observedAt > current.observedAt { return .accepted(candidate) }
++        if candidate.observedAt < current.observedAt { return .droppedLate }
++        return .conflict
++    }
++}
+diff --git a/Sources/ProjectControlDomain/ProjectRegistry.swift b/Sources/ProjectControlDomain/ProjectRegistry.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..48a070fa2f6239193bd8cb48827f07dcfa5df56a
+--- /dev/null
++++ b/Sources/ProjectControlDomain/ProjectRegistry.swift
+@@ -0,0 +1,239 @@
++import Foundation
++
++public struct RepositoryIdentity: Codable, Equatable, Sendable {
++    public let provider: String
++    public let owner: String
++    public let name: String
++
++    public init(provider: String, owner: String, name: String) {
++        self.provider = provider
++        self.owner = owner
++        self.name = name
++    }
++
++    func validate() throws {
++        try requireNonEmpty(provider, field: "repository.provider")
++        try requireNonEmpty(owner, field: "repository.owner")
++        try requireNonEmpty(name, field: "repository.name")
++    }
++}
++
++public struct CheckoutRef: Codable, Equatable, Sendable {
++    public let path: String
++    public let remoteURL: String?
++
++    public init(path: String, remoteURL: String? = nil) {
++        self.path = path
++        self.remoteURL = remoteURL
++    }
++}
++
++public struct CapabilityDescriptor: Codable, Equatable, Sendable {
++    public let name: String
++    public let mode: String
++
++    public init(name: String, mode: String) {
++        self.name = name
++        self.mode = mode
++    }
++}
++
++public struct FieldProvenance: Codable, Equatable, Sendable {
++    public let source: SourceRef
++    public let observedAt: Date
++
++    public init(source: SourceRef, observedAt: Date) {
++        self.source = source
++        self.observedAt = observedAt
++    }
++}
++
++public struct ProjectDescriptor: Codable, Equatable, Sendable {
++    public let projectID: ProjectID
++    public let displayName: String
++    public let repository: RepositoryIdentity
++    public let checkouts: [CheckoutRef]
++    public let defaultBranch: String
++    public let roadmap: ResourceRef?
++    public let sessionScope: ResourceRef?
++    public let environments: [ResourceRef]
++    public let providers: [ResourceRef]
++    public let policyRefs: [ResourceRef]
++    public let capabilities: [CapabilityDescriptor]
++    public let fieldProvenance: [String: FieldProvenance]
++
++    public init(
++        projectID: ProjectID,
++        displayName: String,
++        repository: RepositoryIdentity,
++        checkouts: [CheckoutRef],
++        defaultBranch: String,
++        roadmap: ResourceRef? = nil,
++        sessionScope: ResourceRef? = nil,
++        environments: [ResourceRef] = [],
++        providers: [ResourceRef] = [],
++        policyRefs: [ResourceRef] = [],
++        capabilities: [CapabilityDescriptor] = [],
++        fieldProvenance: [String: FieldProvenance] = [:]
++    ) {
++        self.projectID = projectID
++        self.displayName = displayName
++        self.repository = repository
++        self.checkouts = checkouts
++        self.defaultBranch = defaultBranch
++        self.roadmap = roadmap
++        self.sessionScope = sessionScope
++        self.environments = environments
++        self.providers = providers
++        self.policyRefs = policyRefs
++        self.capabilities = capabilities
++        self.fieldProvenance = fieldProvenance
++    }
++
++    public func validate() throws {
++        try projectID.validate()
++        try requireNonEmpty(displayName, field: "displayName")
++        try repository.validate()
++        try requireNonEmpty(defaultBranch, field: "defaultBranch")
++        guard checkouts.allSatisfy({ !$0.path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
++            throw DomainValidationError.missing("checkouts.path")
++        }
++        try roadmap?.validate()
++        try sessionScope?.validate()
++        try (environments + providers + policyRefs).forEach { try $0.validate() }
++        try fieldProvenance.values.forEach { try $0.source.validate() }
++    }
++}
++
++public struct ProjectRegistryDocument: Codable, Equatable, Sendable {
++    public static let currentSchemaVersion = 1
++
++    public let schemaVersion: Int
++    public let projects: [ProjectDescriptor]
++
++    public init(schemaVersion: Int = currentSchemaVersion, projects: [ProjectDescriptor]) {
++        self.schemaVersion = schemaVersion
++        self.projects = projects
++    }
++
++    public func validate() throws {
++        guard schemaVersion == Self.currentSchemaVersion else {
++            throw DomainValidationError.unsupportedSchemaVersion(schemaVersion)
++        }
++        var IDs = Set<ProjectID>()
++        for project in projects {
++            try project.validate()
++            guard IDs.insert(project.projectID).inserted else {
++                throw DomainValidationError.duplicate(project.projectID.rawValue)
++            }
++        }
++    }
++}
++
++public enum ProjectRegistryCodec {
++    private static let topLevelKeys: Set<String> = ["schemaVersion", "projects"]
++    private static let projectKeys: Set<String> = [
++        "projectID", "displayName", "repository", "checkouts", "defaultBranch", "roadmap",
++        "sessionScope", "environments", "providers", "policyRefs", "capabilities", "fieldProvenance",
++    ]
++    private static let repositoryKeys: Set<String> = ["provider", "owner", "name"]
++    private static let checkoutKeys: Set<String> = ["path", "remoteURL"]
++    private static let resourceKeys: Set<String> = ["kind", "identifier"]
++    private static let capabilityKeys: Set<String> = ["name", "mode"]
++    private static let provenanceKeys: Set<String> = ["source", "observedAt"]
++    private static let sourceKeys: Set<String> = ["system", "locator"]
++
++    public struct Migration {
++        public let fromVersion: Int
++        public let toVersion: Int
++        public let transform: (Data) throws -> Data
++
++        public init(fromVersion: Int, toVersion: Int, transform: @escaping (Data) throws -> Data) {
++            self.fromVersion = fromVersion
++            self.toVersion = toVersion
++            self.transform = transform
++        }
++    }
++
++    public static func decode(
++        _ data: Data,
++        decoder: JSONDecoder = JSONDecoder(),
++        migrations: [Migration] = []
++    ) throws -> ProjectRegistryDocument {
++        var migratedData = data
++        var visitedVersions = Set<Int>()
++        while true {
++            let raw = try JSONSerialization.jsonObject(with: migratedData)
++            guard let object = raw as? [String: Any] else {
++                throw DomainValidationError.invalidState("registry root must be an object")
++            }
++            guard let version = object["schemaVersion"] as? Int else {
++                throw DomainValidationError.missing("schemaVersion")
++            }
++            if version == ProjectRegistryDocument.currentSchemaVersion { break }
++            guard visitedVersions.insert(version).inserted,
++                  let migration = migrations.first(where: { $0.fromVersion == version }),
++                  migration.toVersion != version else {
++                throw DomainValidationError.unsupportedSchemaVersion(version)
++            }
++            migratedData = try migration.transform(migratedData)
++        }
++
++        let raw = try JSONSerialization.jsonObject(with: migratedData)
++        guard let object = raw as? [String: Any] else {
++            throw DomainValidationError.invalidState("registry root must be an object")
++        }
++        try rejectUnknown(keys: Set(object.keys), allowed: topLevelKeys, scope: "registry")
++        if let projects = object["projects"] as? [[String: Any]] {
++            for (index, project) in projects.enumerated() {
++                let scope = "projects[\(index)]"
++                try rejectUnknown(keys: Set(project.keys), allowed: projectKeys, scope: scope)
++                try rejectObject(project["repository"], allowed: repositoryKeys, scope: "\(scope).repository")
++                try rejectObjects(project["checkouts"], allowed: checkoutKeys, scope: "\(scope).checkouts")
++                try rejectObject(project["roadmap"], allowed: resourceKeys, scope: "\(scope).roadmap")
++                try rejectObject(project["sessionScope"], allowed: resourceKeys, scope: "\(scope).sessionScope")
++                try rejectObjects(project["environments"], allowed: resourceKeys, scope: "\(scope).environments")
++                try rejectObjects(project["providers"], allowed: resourceKeys, scope: "\(scope).providers")
++                try rejectObjects(project["policyRefs"], allowed: resourceKeys, scope: "\(scope).policyRefs")
++                try rejectObjects(project["capabilities"], allowed: capabilityKeys, scope: "\(scope).capabilities")
++                if let provenance = project["fieldProvenance"] as? [String: [String: Any]] {
++                    for (field, value) in provenance {
++                        try rejectUnknown(keys: Set(value.keys), allowed: provenanceKeys, scope: "\(scope).fieldProvenance.\(field)")
++                        try rejectObject(value["source"], allowed: sourceKeys, scope: "\(scope).fieldProvenance.\(field).source")
++                    }
++                }
++            }
++        }
++        let document = try decoder.decode(ProjectRegistryDocument.self, from: migratedData)
++        try document.validate()
++        return document
++    }
++
++    public static func encode(_ document: ProjectRegistryDocument, encoder: JSONEncoder = JSONEncoder()) throws -> Data {
++        try document.validate()
++        return try encoder.encode(document)
++    }
++
++    private static func rejectUnknown(keys: Set<String>, allowed: Set<String>, scope: String) throws {
++        let unknown = keys.subtracting(allowed).map { "\(scope).\($0)" }
++        guard unknown.isEmpty else { throw DomainValidationError.unknownFields(unknown) }
++    }
++
++    private static func rejectObject(_ value: Any?, allowed: Set<String>, scope: String) throws {
++        guard let value, !(value is NSNull) else { return }
++        guard let object = value as? [String: Any] else {
++            throw DomainValidationError.invalidState("\(scope) must be an object")
++        }
++        try rejectUnknown(keys: Set(object.keys), allowed: allowed, scope: scope)
++    }
++
++    private static func rejectObjects(_ value: Any?, allowed: Set<String>, scope: String) throws {
++        guard let value else { return }
++        guard let objects = value as? [[String: Any]] else {
++            throw DomainValidationError.invalidState("\(scope) must be an array of objects")
++        }
++        for (index, object) in objects.enumerated() {
++            try rejectUnknown(keys: Set(object.keys), allowed: allowed, scope: "\(scope)[\(index)]")
++        }
++    }
++}
+diff --git a/tests/ProjectControlDomainTests/AuditEventTests.swift b/tests/ProjectControlDomainTests/AuditEventTests.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..70a4d58a4a32c88650c019bedeb734c2c9d4707f
+--- /dev/null
++++ b/tests/ProjectControlDomainTests/AuditEventTests.swift
+@@ -0,0 +1,65 @@
++import XCTest
++@testable import ProjectControlDomain
++
++final class AuditEventTests: XCTestCase {
++    private let source = SourceRef(system: "github", locator: "repos/Steven-ZYH/sixlab/pulls/1")
++    private let resource = ResourceRef(kind: "pull-request", identifier: "1")
++
++    private func event(
++        id: UUID = UUID(),
++        category: AuditCategory = .observation,
++        generation: UInt64 = 1,
++        observedAt: Date = Date(timeIntervalSince1970: 100),
++        commandID: UUID? = nil,
++        attributes: [String: String] = [:]
++    ) -> AuditEvent {
++        AuditEvent(
++            eventID: id,
++            projectID: ProjectID(rawValue: "opcb"),
++            resource: resource,
++            category: category,
++            source: source,
++            observedAt: observedAt,
++            generation: generation,
++            commandID: commandID,
++            attributes: attributes
++        )
++    }
++
++    func testRoundTripAndStableDeduplicationKey() throws {
++        let item = event(id: UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!)
++        try item.validate()
++        let data = try JSONEncoder().encode(item)
++        XCTAssertEqual(try JSONDecoder().decode(AuditEvent.self, from: data), item)
++        XCTAssertEqual(item.deduplicationKey, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
++    }
++
++    func testClaimDoesNotBecomeExecutionOrVerification() {
++        let claim = event(category: .claim)
++        XCTAssertEqual(claim.category, .claim)
++        XCTAssertNotEqual(claim.category, .execution)
++        XCTAssertNotEqual(claim.category, .verification)
++        XCTAssertThrowsError(try event(category: .execution).validate())
++        XCTAssertNoThrow(try event(category: .execution, commandID: UUID()).validate())
++    }
++
++    func testLateDuplicateAndConflictOrdering() {
++        let id = UUID()
++        let current = event(id: id, generation: 2, observedAt: Date(timeIntervalSince1970: 200))
++        XCTAssertEqual(AuditOrdering.compare(candidate: current, against: current), .duplicate)
++        XCTAssertEqual(AuditOrdering.compare(candidate: event(generation: 1), against: current), .late)
++        XCTAssertEqual(AuditOrdering.compare(candidate: event(generation: 3), against: current), .newer)
++        XCTAssertEqual(
++            AuditOrdering.compare(candidate: event(generation: 2, observedAt: current.observedAt), against: current),
++            .conflict
++        )
++    }
++
++    func testPrivacySensitiveAttributesFailClosed() {
++        XCTAssertThrowsError(try event(attributes: ["Authorization": "do-not-record"]).validate()) { error in
++            guard case .privacyViolation = error as? DomainValidationError else {
++                return XCTFail("expected privacy violation, got \(error)")
++            }
++        }
++    }
++}
+diff --git a/tests/ProjectControlDomainTests/Fixtures/opcb-registry-v1.json b/tests/ProjectControlDomainTests/Fixtures/opcb-registry-v1.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0a7a401cea297f293c0b19f4665bdbf9852887e7
+--- /dev/null
++++ b/tests/ProjectControlDomainTests/Fixtures/opcb-registry-v1.json
+@@ -0,0 +1,68 @@
++{
++  "schemaVersion": 1,
++  "projects": [
++    {
++      "projectID": "opcb",
++      "displayName": "OPCB",
++      "repository": {
++        "provider": "github",
++        "owner": "Steven-ZYH",
++        "name": "sixlab"
++      },
++      "checkouts": [
++        {
++          "path": "/Users/steven/Desktop/目纹/Program/SIXLAB"
++        }
++      ],
++      "defaultBranch": "main",
++      "roadmap": {
++        "kind": "file",
++        "identifier": "docs/ROADMAP.md"
++      },
++      "sessionScope": {
++        "kind": "codex-session-prefix",
++        "identifier": "opcb"
++      },
++      "environments": [
++        {
++          "kind": "environment",
++          "identifier": "production"
++        }
++      ],
++      "providers": [
++        {
++          "kind": "provider",
++          "identifier": "github"
++        }
++      ],
++      "policyRefs": [
++        {
++          "kind": "policy",
++          "identifier": "peer-approval/current-head"
++        }
++      ],
++      "capabilities": [
++        {
++          "name": "pull-request-read",
++          "mode": "read-only"
++        }
++      ],
++      "fieldProvenance": {
++        "repository": {
++          "source": {
++            "system": "r01-fact-freeze",
++            "locator": "SOURCE-MANIFEST.sha256"
++          },
++          "observedAt": 1786000000
++        },
++        "defaultBranch": {
++          "source": {
++            "system": "legacy-config",
++            "locator": "native/AppDelegate.swift"
++          },
++          "observedAt": 1786000000
++        }
++      }
++    }
++  ]
++}
+diff --git a/tests/ProjectControlDomainTests/ObservedTests.swift b/tests/ProjectControlDomainTests/ObservedTests.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..3f9532de6c608a7eb3a5d19d1ad1db36ad90fb01
+--- /dev/null
++++ b/tests/ProjectControlDomainTests/ObservedTests.swift
+@@ -0,0 +1,113 @@
++import XCTest
++@testable import ProjectControlDomain
++
++final class ObservedTests: XCTestCase {
++    private let source = SourceRef(system: "github", locator: "pull-request-list")
++
++    private func observed<Value: Codable & Equatable & Sendable>(
++        value: Value?,
++        at: TimeInterval = 100,
++        expires: TimeInterval? = 200,
++        generation: UInt64 = 1,
++        freshness: Freshness = .live,
++        error: ObservationFailure? = nil
++    ) -> Observed<Value> {
++        Observed(
++            value: value,
++            source: source,
++            observedAt: Date(timeIntervalSince1970: at),
++            expiresAt: expires.map(Date.init(timeIntervalSince1970:)),
++            generation: generation,
++            freshness: freshness,
++            error: error
++        )
++    }
++
++    func testTTLTransitionsLiveToStaleWithoutInventingNewEvidence() throws {
++        let live: Observed<[Int]> = observed(value: [1, 2])
++        try live.validate()
++        XCTAssertEqual(live.evaluated(at: Date(timeIntervalSince1970: 199)).freshness, .live)
++        let stale = live.evaluated(at: Date(timeIntervalSince1970: 200))
++        XCTAssertEqual(stale.freshness, .stale)
++        XCTAssertEqual(stale.value, [1, 2])
++        XCTAssertEqual(stale.observedAt, live.observedAt)
++        XCTAssertEqual(stale.generation, live.generation)
++    }
++
++    func testEmptySuccessIsDistinctFromUnknownAndFailure() throws {
++        let empty: Observed<[String]> = observed(value: [])
++        try empty.validate()
++        XCTAssertEqual(empty.value, [])
++        XCTAssertEqual(empty.freshness, .live)
++
++        let unknown: Observed<[String]> = observed(
++            value: nil,
++            expires: nil,
++            freshness: .unknown,
++            error: ObservationFailure(kind: .missingEvidence, message: "not observed")
++        )
++        try unknown.validate()
++        XCTAssertNil(unknown.value)
++
++        let unreachable: Observed<[String]> = observed(
++            value: nil,
++            expires: nil,
++            freshness: .unreachable,
++            error: ObservationFailure(kind: .providerFailure, message: "provider unavailable")
++        )
++        try unreachable.validate()
++        XCTAssertNil(unreachable.value)
++        XCTAssertNotEqual(unreachable.freshness, .live)
++    }
++
++    func testUnreachableCannotMasqueradeAsHealthyOrEmpty() {
++        let invalid: Observed<[String]> = observed(value: [], freshness: .live, error: ObservationFailure(kind: .offline, message: "offline"))
++        XCTAssertThrowsError(try invalid.validate())
++        let missingError: Observed<[String]> = observed(value: nil, expires: nil, freshness: .unreachable)
++        XCTAssertThrowsError(try missingError.validate())
++    }
++
++    func testLateObservationIsDroppedAndRecoveryAccepted() throws {
++        let current: Observed<Int> = observed(value: 2, at: 200, expires: 300, generation: 2)
++        let late: Observed<Int> = observed(value: 1, at: 100, expires: 200, generation: 1)
++        XCTAssertEqual(try ObservationMerger.merge(current: current, candidate: late), .droppedLate)
++
++        let offline: Observed<Int> = observed(
++            value: 2,
++            at: 210,
++            expires: nil,
++            generation: 3,
++            freshness: .unreachable,
++            error: ObservationFailure(kind: .offline, message: "offline")
++        )
++        XCTAssertEqual(try ObservationMerger.merge(current: current, candidate: offline), .accepted(offline))
++
++        let recovered: Observed<Int> = observed(value: 3, at: 220, expires: 320, generation: 4)
++        XCTAssertEqual(try ObservationMerger.merge(current: offline, candidate: recovered), .accepted(recovered))
++    }
++
++    func testTimeoutUnsupportedAndMissingEvidenceStayDistinct() throws {
++        let timeout: Observed<Int> = observed(
++            value: nil,
++            expires: nil,
++            freshness: .unreachable,
++            error: ObservationFailure(kind: .timeout, message: "deadline exceeded")
++        )
++        let unsupported: Observed<Int> = observed(
++            value: nil,
++            expires: nil,
++            freshness: .unknown,
++            error: ObservationFailure(kind: .unsupported, message: "provider lacks capability")
++        )
++        let missing: Observed<Int> = observed(
++            value: nil,
++            expires: nil,
++            freshness: .unknown,
++            error: ObservationFailure(kind: .missingEvidence, message: "not collected")
++        )
++        try [timeout, unsupported, missing].forEach { try $0.validate() }
++        XCTAssertEqual(timeout.error?.kind, .timeout)
++        XCTAssertEqual(unsupported.error?.kind, .unsupported)
++        XCTAssertEqual(missing.error?.kind, .missingEvidence)
++    }
++}
+diff --git a/tests/ProjectControlDomainTests/ProjectRegistryTests.swift b/tests/ProjectControlDomainTests/ProjectRegistryTests.swift
+new file mode 100644
+index 0000000000000000000000000000000000000000..24c4ac3f90406cd80b3a8379763a1f5cf81b9d55
+--- /dev/null
++++ b/tests/ProjectControlDomainTests/ProjectRegistryTests.swift
+@@ -0,0 +1,91 @@
++import XCTest
++@testable import ProjectControlDomain
++
++final class ProjectRegistryTests: XCTestCase {
++    private func fixture() -> ProjectRegistryDocument {
++        let source = SourceRef(system: "legacy-config", locator: "native/AppDelegate.swift")
++        let project = ProjectDescriptor(
++            projectID: ProjectID(rawValue: "opcb"),
++            displayName: "OPCB",
++            repository: RepositoryIdentity(provider: "github", owner: "Steven-ZYH", name: "sixlab"),
++            checkouts: [CheckoutRef(path: "/Users/steven/Desktop/目纹/Program/SIXLAB")],
++            defaultBranch: "main",
++            roadmap: ResourceRef(kind: "file", identifier: "docs/ROADMAP.md"),
++            sessionScope: ResourceRef(kind: "codex-session-prefix", identifier: "opcb"),
++            environments: [ResourceRef(kind: "environment", identifier: "production")],
++            providers: [ResourceRef(kind: "provider", identifier: "github")],
++            policyRefs: [ResourceRef(kind: "policy", identifier: "peer-approval/current-head")],
++            capabilities: [CapabilityDescriptor(name: "pull-request-read", mode: "read-only")],
++            fieldProvenance: ["defaultBranch": FieldProvenance(source: source, observedAt: Date(timeIntervalSince1970: 1_786_000_000))]
++        )
++        return ProjectRegistryDocument(projects: [project])
++    }
++
++    func testRoundTripPreservesSemantics() throws {
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .secondsSince1970
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .secondsSince1970
++        let data = try ProjectRegistryCodec.encode(fixture(), encoder: encoder)
++        XCTAssertEqual(try ProjectRegistryCodec.decode(data, decoder: decoder), fixture())
++    }
++
++    func testOPCBFixtureCarriesFieldSourcesAndSeparatesCheckoutFromIdentity() throws {
++        let url = try XCTUnwrap(Bundle.module.url(forResource: "opcb-registry-v1", withExtension: "json"))
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .secondsSince1970
++        let document = try ProjectRegistryCodec.decode(Data(contentsOf: url), decoder: decoder)
++        let project = try XCTUnwrap(document.projects.first)
++        XCTAssertEqual(project.projectID.rawValue, "opcb")
++        XCTAssertEqual(project.repository, RepositoryIdentity(provider: "github", owner: "Steven-ZYH", name: "sixlab"))
++        XCTAssertTrue(project.checkouts[0].path.hasPrefix("/"))
++        XCTAssertNotEqual(project.projectID.rawValue, project.checkouts[0].path)
++        XCTAssertEqual(project.fieldProvenance["repository"]?.source.system, "r01-fact-freeze")
++        XCTAssertEqual(project.fieldProvenance["defaultBranch"]?.source.system, "legacy-config")
++    }
++
++    func testRejectsUnknownSchemaAndUnknownFields() throws {
++        let unsupported = Data(#"{"schemaVersion":2,"projects":[]}"#.utf8)
++        XCTAssertThrowsError(try ProjectRegistryCodec.decode(unsupported)) { error in
++            XCTAssertEqual(error as? DomainValidationError, .unsupportedSchemaVersion(2))
++        }
++        let unknown = Data(#"{"schemaVersion":1,"projects":[],"assumeHealthy":true}"#.utf8)
++        XCTAssertThrowsError(try ProjectRegistryCodec.decode(unknown)) { error in
++            XCTAssertEqual(error as? DomainValidationError, .unknownFields(["registry.assumeHealthy"]))
++        }
++
++        let nested = Data(#"{"schemaVersion":1,"projects":[{"projectID":"opcb","displayName":"OPCB","repository":{"provider":"github","owner":"owner","name":"repo","token":"forbidden"},"checkouts":[],"defaultBranch":"main","environments":[],"providers":[],"policyRefs":[],"capabilities":[],"fieldProvenance":{}}]}"#.utf8)
++        XCTAssertThrowsError(try ProjectRegistryCodec.decode(nested)) { error in
++            XCTAssertEqual(error as? DomainValidationError, .unknownFields(["projects[0].repository.token"]))
++        }
++    }
++
++    func testExplicitMigrationCanUpgradeAnOlderSchema() throws {
++        let legacy = Data(#"{"schemaVersion":0,"projects":[]}"#.utf8)
++        let migration = ProjectRegistryCodec.Migration(fromVersion: 0, toVersion: 1) { data in
++            var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
++            object["schemaVersion"] = 1
++            return try JSONSerialization.data(withJSONObject: object)
++        }
++        let decoded = try ProjectRegistryCodec.decode(legacy, migrations: [migration])
++        XCTAssertEqual(decoded, ProjectRegistryDocument(projects: []))
++    }
++
++    func testProjectIdentityCannotBeAnAbsolutePath() {
++        let bad = ProjectDescriptor(
++            projectID: ProjectID(rawValue: "/tmp/opcb"),
++            displayName: "OPCB",
++            repository: RepositoryIdentity(provider: "github", owner: "owner", name: "repo"),
++            checkouts: [],
++            defaultBranch: "main"
++        )
++        XCTAssertThrowsError(try ProjectRegistryDocument(projects: [bad]).validate())
++    }
++
++    func testDuplicateProjectIDsFailClosed() {
++        let project = fixture().projects[0]
++        XCTAssertThrowsError(try ProjectRegistryDocument(projects: [project, project]).validate()) { error in
++            XCTAssertEqual(error as? DomainValidationError, .duplicate("opcb"))
++        }
++    }
++}

@@ -1,0 +1,21 @@
+SOURCE_SHA=3241754693b3d2d10bc62df25b15a91567518b0a
+TOOLCHAIN=Apple Swift 6.3.3; Xcode 26.6; arm64
+
+swift test: PASS
+- 22 tests
+- 0 failures
+
+CI_EXPECTED_SHA=$SOURCE_SHA ./test-native.sh: PASS
+- RevisionGuard: PASS
+- Native smoke/render: 15 PASS
+- ReviewWorkerSmoke: PASS
+- AppIconBundle: PASS
+- native test suite: PASS
+
+exact candidate codesign: PASS
+exact candidate executable sha256: 1b284fa53949b75468b7060d62cfadd0d7c2f66b133fc1eee20015f8e93b229f
+installed executable sha256: 7c5e06b84e047ffa7b1eecd6562dff48d907d8ce4bb6d46bb6e12cbb758c7fc9
+
+Environment note:
+- Two initial sandboxed `swift test` attempts did not enter project tests because the host blocked the user module cache and SwiftPM nested sandbox.
+- The same command was rerun outside that sandbox and passed completely; these were environment preflight failures, not code test failures.

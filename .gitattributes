@@ -1,0 +1,5 @@
+# Preserve archived patch evidence byte-for-byte; whitespace is payload here.
+evidence/**/*.patch -whitespace
+
+# These archived Markdown snapshots use two-space hard line breaks.
+evidence/R01/2026-08-06/*.md whitespace=-trailing-space
