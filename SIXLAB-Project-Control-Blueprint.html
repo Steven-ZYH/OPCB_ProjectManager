@@ -1792,16 +1792,16 @@ html>body{
     <div class="card spb-phase-overview" aria-labelledby="spb-execution-snapshot-title">
       <div class="spb-section-heading">
         <h2 id="spb-execution-snapshot-title">执行状态快照</h2>
-        <span class="viz-badge">2026-08-09 · R01 基线模块已关闭</span>
+        <span class="viz-badge">2026-08-11 · P1.2／P1.3-A RegistryStore 模块已关闭</span>
       </div>
-      <p>R01.1、R01.2 与 R01.3 的事实冻结、可重建行为基线、Legacy Facade/Shadow 以及从 live main 重建并安装验收已经闭环。正式 App 仍由 <code>legacyOnly</code> 路径驱动；这不是 R01.4 切流或旧编排退休完成。</p>
+      <p>R01 基线保持关闭；P1.2 模块边界与 P1.3-A Registry schema／原子持久化／迁移／隐私校验已通过 PR #13 合并，并从 merged main 正式安装运行。正式 App 仍由 <code>legacyOnly</code> 路径驱动；整个 P1、P1.3-B 原生仓库管理、R01.4 切流和旧编排退休均未完成。</p>
       <div class="spb-phase-boundary">
         <table>
           <tbody>
-            <tr><th>关闭范围</th><td>R01 基线／Facade／候选安装模块；来源 <code>6f23f0b6015573632ed830f59cc943e80f8daa63</code>，安装验收 <code>INSTALLED-ACCEPTED</code>。</td></tr>
+            <tr><th>关闭范围</th><td>P1.2 + P1.3-A RegistryStore 内核切片；PR #13 squash main <code>846344a6481d93070e47338c06abf207e7b43d2d</code>，安装运行验收 <code>INSTALLED-DEPLOYED-ACCEPTED</code>。</td></tr>
             <tr><th>保留后续</th><td>R01.4 继续作为 P2–P4 的横向切流与旧编排退休门；必须随对应 Registry、事实、Session/PR/Roadmap 与命令模块逐项验收。</td></tr>
-            <tr><th>下一主阶段</th><td>P1 · 控制平面内核。先完成模块边界，再完成 Registry 持久化、状态归一化、SQLite 审计、Policy、Runtime Actor，最后迁移菜单栏读路径。</td></tr>
-            <tr><th>启动入口</th><td><code>evidence/P1/2026-08-09/P1-CONTROL-PLANE-KERNEL-START-HANDOFF.md</code></td></tr>
+            <tr><th>下一主阶段</th><td>P1.4-A · 纯 State Normalizer reducer／generation／CAS；RefreshCoordinator 所有权延后到 P1.7 Runtime Actor，避免中间形成双 timer owner。</td></tr>
+            <tr><th>启动入口</th><td><code>evidence/P1/2026-08-11/P1.4-STATE-NORMALIZER-START-HANDOFF.md</code></td></tr>
           </tbody>
         </table>
       </div>
@@ -1812,13 +1812,13 @@ html>body{
       <table class="spb-work-package-table">
         <thead><tr><th>顺序</th><th>工作包</th><th>当前缺口</th><th>退出门</th></tr></thead>
         <tbody>
-          <tr><td>1</td><td>P1.2 · Swift Package 模块边界</td><td>当前只有 <code>ProjectControlDomain</code> target；Adapters、Store、Policy、AppUI 仍缺失。</td><td>依赖方向可测试，Domain 不依赖 AppKit/Process，旧 native build 继续通过。</td></tr>
-          <tr><td>2</td><td>P1.3 · Registry 持久化与校验</td><td>Schema/fixture 已有；原子 Store、迁移、健康检查与稳定项目顺序未完成。</td><td>跨 App/系统重启恢复；错误项目隔离；不保存 secret。</td></tr>
-          <tr><td>3</td><td>P1.4 · State Normalizer/Refresh</td><td><code>Observed</code> 合同已有；统一 generation、CAS、晚到保护与刷新所有权未完成。</td><td>旧响应不能覆盖新事实；partial/unknown 不被补成成功。</td></tr>
-          <tr><td>4</td><td>P1.5 · SQLite 事件账本</td><td>Audit envelope 已有；追加事件、物化视图、migration、rebuild 与 recovery 未完成。</td><td>投影可重建；崩溃窗口不产生“执行但无记录”。</td></tr>
-          <tr><td>5</td><td>P1.6 · Policy Engine</td><td>Policy refs 只有合同字段；缺少 allow/confirm/deny 矩阵、required facts 和反例测试。</td><td>未知动作/事实默认 deny；merge、deploy、secret-use 相互独立。</td></tr>
-          <tr><td>6</td><td>P1.7 · Runtime Actor</td><td>AppDelegate 仍拥有旧 timer/cache/provider 编排；缺少单一生命周期与连接所有权。</td><td>菜单栏和未来主窗口共享同一 projection，无双 timer/cache。</td></tr>
-          <tr><td>7</td><td>P1.8 + R01.4 首切片</td><td>六路 Facade 只有 <code>legacyOnly</code>/<code>shadow</code>，尚无生产读路径切换与退休记录。</td><td>一次只切一个只读切片；完整回归、安装候选和一个发布周期回退标记。</td></tr>
+          <tr><td>CLOSED</td><td>P1.2 · Swift Package 模块边界</td><td>Domain／Store／只读 Adapters 边界与 CircleCI XCTest 接线已随 PR #13 关闭；Policy/UI target 仍按真实实现时再建立。</td><td><code>846344a…</code> clean build、依赖方向测试与完整 native Harness 通过。</td></tr>
+          <tr><td>CLOSED-A</td><td>P1.3 · Registry 持久化与校验</td><td>schema、原子 Store、迁移、隐私、LKG 与四项目顺序已关闭；访问健康和 App 内 CRUD 归入 P2.2。</td><td>正式安装生成 mode 0600 Registry v1；错误/未知/secret fail-closed。</td></tr>
+          <tr><td>NEXT 1</td><td>P1.4-A · State Normalizer reducer/CAS</td><td><code>Observed</code> 与 pairwise merger 已有；缺 keyed projection、monotonic generation、expected-generation CAS、partial/expiry reducer。</td><td>旧响应不能覆盖新事实；partial/unknown 不被补成成功；本切片不新增 timer。</td></tr>
+          <tr><td>2</td><td>P1.5 · SQLite 事件账本</td><td>Audit envelope 已有；追加事件、物化视图、migration、rebuild 与 recovery 未完成。</td><td>投影可重建；崩溃窗口不产生“执行但无记录”。</td></tr>
+          <tr><td>3</td><td>P1.6 · Policy Engine</td><td>Policy refs 只有合同字段；缺少 CommandIntent／PolicyDecision、allow/confirm/deny、required facts 和反例测试。</td><td>未知动作/事实默认 deny；merge、deploy、secret-use 相互独立。</td></tr>
+          <tr><td>4</td><td>P1.7 · Runtime Actor + RefreshCoordinator</td><td>AppDelegate 仍拥有 4 个 timer、Set 去重与 provider 编排；缺少单一生命周期、取消、重连与刷新所有权。</td><td>菜单栏和未来主窗口共享同一 projection，无双 timer/cache。</td></tr>
+          <tr><td>5</td><td>P1.8 + R01.4 首切片</td><td>六路 Facade 只有 <code>legacyOnly</code>/<code>shadow</code>，尚无生产读路径切换与退休记录。</td><td>一次只切一个只读切片；完整回归、安装候选和一个发布周期回退标记。</td></tr>
         </tbody>
       </table>
     </div>
@@ -2256,12 +2256,12 @@ html>body{
           rollback: '每个模块迁移保持兼容 facade，可逐模块回切旧实现。',
           tasks: [
             { id:'P1.1', title:'定义领域模型与事件词汇', why:'没有统一词汇时，PR、Session、环境和缓存会继续用各自状态枚举，无法做全局策略和审计。', actions:['定义 Project、ResourceRef、ObservedFact、Freshness、CommandIntent、PolicyDecision、AuditEvent。','规定 live/cached/fetching/unreachable/unknown 的转换与展示语义。','区分用户声明、系统观察、已验证事实和推断。'], files:'新 ProjectControlDomain；从 native/Models.swift 迁移。', output:'版本化 schema、状态机和序列化测试。', evidence:'同一状态在菜单栏、主窗口和审计中含义一致。', permission:'本地代码。', failure:'把 UI 文案当领域状态，或把缓存命中当 live 事实。', rollback:'保留旧 Models facade，逐模型迁移。', depends:'P0.7' },
-            { id:'P1.2', title:'建立 Swift Package 模块边界', why:'当前测试重复编译全部源文件，任何功能都会耦合 AppKit、网络和存储。', actions:['建立 Domain、Adapters、Store、Policy、AppUI targets。','把纯模型/解析器先迁出 AppKit。','为每个 target 建独立测试和依赖方向约束。'], files:'Package.swift、Sources/、Tests/；兼容 build-native.sh。', output:'可独立构建的模块图与 CI/Harness 接线。', evidence:'Domain 不依赖 AppKit/Process；Adapters 不依赖具体 ViewController。', permission:'本地重构。', failure:'只是移动文件，依赖仍双向或通过全局单例绕回。', rollback:'保留原 swiftc 清单作为临时兼容构建。', depends:'P1.1' },
-            { id:'P1.3', title:'建立可持久化 Project Registry', why:'项目仓库、checkout、环境、路线图和 workflow 现在散落在代码常量、UI 与启动环境，无法安全扩展或跨重启恢复。', actions:['定义 registry schema、版本与原子持久化格式。','迁移 OPCB、PR CONTROL、OPCB FDE、OPCB_Vault 四个现有项目及顺序；幂等导入内置 catalog/SIXLAB_PR_PROJECTS。','校验 repository access、localPath、defaultBranch、roadmapSources、environmentRefs、capabilities。'], files:'ProjectControlDomain/Registry、RegistryStore、Application Support/UserDefaults migration。', output:'可验证、可迁移、跨重启恢复的项目注册表。', evidence:'重启 App/系统后四个项目和顺序不丢；新增项目不改 DashboardViewController 或 GitHubClient。', permission:'本地配置；修改 registry 要审计，不授予远端写权限。', failure:'registry 只存在环境变量，或保存 token、SSH 私钥路径正文、项目专属业务逻辑。', rollback:'保留内置 catalog facade 只读回退；迁移失败不覆盖旧配置。', depends:'P1.2' },
-            { id:'P1.4', title:'建立状态归一化与刷新调度', why:'不同计时器和客户端各自写 UI，容易出现旧数据覆盖新数据或部分成功冒充整体成功。', actions:['为每个 adapter 定义 snapshot envelope。','统一 observedAt、expiresAt、source、error、generation。','实现按资源去重、stale 抑制和成功后替换缓存。'], files:'StateNormalizer、RefreshCoordinator。', output:'统一 projection 与竞态测试。', evidence:'晚到旧响应不能覆盖新 generation；部分失败保留逐项 unknown。', permission:'只读数据面。', failure:'一个 API 成功就把整个项目标绿，或后台失败清空旧快照。', rollback:'按 adapter 回退旧缓存读取。', depends:'P1.1,P1.3' },
+            { id:'P1.2', title:'建立 Swift Package 模块边界（CLOSED）', why:'当前测试重复编译全部源文件，任何功能都会耦合 AppKit、网络和存储。', actions:['已建立 Domain、Store 与只读 Adapters target。','已把 Registry/Observed/Audit/Shadow 纯模型置于 package 边界。','已把 Swift package XCTest 接入 test-native.sh/CircleCI。'], files:'Package.swift、Sources/、Tests/；兼容 build-native.sh。', output:'PR #13 / main 846344a 的可独立构建模块图与 CI/Harness 接线。', evidence:'Domain 不依赖 AppKit/Process；38/38 package tests 与完整 Harness 通过。', permission:'本地重构。', failure:'未来通过全局单例或 native 反向 import 绕回依赖时重新打开。', rollback:'保留原 swiftc 清单作为兼容 build；正式 App 具备安装前回滚包。', depends:'P1.1' },
+            { id:'P1.3', title:'建立可持久化 Project Registry（A CLOSED／B→P2.2）', why:'项目仓库、checkout、环境、路线图和 workflow 现在散落在代码常量、UI 与启动环境，无法安全扩展或跨重启恢复。', actions:['已完成 schema、原子持久化、v0→v1 migration、隐私校验、LKG 恢复。','已幂等迁移 OPCB、PR CONTROL、OPCB FDE、OPCB_Vault 四个项目及顺序。','repository access/provider/environment health 与 App 内 CRUD 延后到 P2.2。'], files:'ProjectControlDomain/Registry、RegistryStore、Application Support migration。', output:'正式安装可跨进程恢复的 Registry v1 内核。', evidence:'mode 0600 Registry v1 已落盘；四项目和顺序恢复；secret/unknown/schema invalid fail-closed。', permission:'本地配置；不授予远端写权限。', failure:'访问健康或 CRUD 被误报为本切片已完成时重新打开。', rollback:'last-known-good、只读 catalog facade 与安装前私有备份。', depends:'P1.2' },
+            { id:'P1.4', title:'建立纯 State Normalizer reducer/CAS（NEXT）', why:'不同计时器和客户端各自写 UI，容易出现旧数据覆盖新数据或部分成功冒充整体成功。', actions:['定义 resource/generation/correlation observation envelope。','实现 keyed projection、expected-generation CAS、begin/accept/fail/expire reducer。','输出 applied/duplicate/late/conflict/invalid typed decision 并覆盖逐资源 partial。'], files:'ProjectControlDomain/StateNormalizer、只读 Adapter envelope、in-memory CAS test store。', output:'纯归一化 projection reducer 与竞态测试；不新增 timer。', evidence:'晚到旧响应不能覆盖新 generation；部分失败保留逐项 unknown；expiry 不发明 evidence。', permission:'只读数据面。', failure:'一个 API 成功把整个项目标绿，或在 Runtime Actor 前新增第二套 refresh owner。', rollback:'未接真实 provider，旧 Facade 继续驱动 UI。', depends:'P1.1,P1.3-A' },
             { id:'P1.5', title:'建立 SQLite 事件账本与物化视图', why:'只有 JSON 快照无法回答“为什么变成这样”、不能可靠恢复动作和审计。', actions:['设计 append-only events、command_attempts、evidence_refs、outbox。','建立 projection rebuild 与 schema migration。','定义保留期、压缩和敏感字段 redaction。'], files:'ProjectControlStore；独立 SQLite 文件。', output:'可重放事件库、迁移、备份和恢复测试。', evidence:'删除物化表后可从事件重建；审计不含 secret 或隐藏推理。', permission:'本地数据库写入。', failure:'把整个 raw transcript、环境变量或 secret 值写入 event。', rollback:'数据库版本化备份；迁移失败保持旧库只读。', depends:'P1.1,P1.4' },
             { id:'P1.6', title:'实现 Policy Engine', why:'如果权限只写在按钮 enabled 状态里，CLI、通知或未来远程入口会绕过安全边界。', actions:['把权限矩阵编码为纯函数策略。','输入 actor、project、environment、action、current facts 和 requested target。','输出 allow、confirm、deny、requiredEvidence 和 reason。'], files:'ProjectControlPolicy。', output:'策略表、单元测试、反例用例。', evidence:'merge、prod deploy、secret-use 缺任一证据均 fail-closed。', permission:'无外部写入。', failure:'UI 是否显示按钮被误当成授权，或 unknown 被当 allow。', rollback:'高风险 action 全部 deny。', depends:'P1.1,P1.5' },
-            { id:'P1.7', title:'建立应用内 Runtime Actor 与 UI facade', why:'主窗口和菜单栏需要共享同一事实与刷新生命周期，不能各自重复连接 GitHub、App Server 和 SSH；现阶段也没有必要承担通用 daemon 的 IPC 复杂度。', actions:['定义 Runtime Actor 的生命周期、连接所有权、取消与重连语义。','把 adapters、store、policy 的所有权移到 runtime/core。','AppDelegate 只负责应用生命周期、订阅 projection 和转发 typed intent。'], files:'ProjectControlRuntime、AppFacade、AppDelegate 迁移。', output:'单一后台状态源与兼容 UI 接口。', evidence:'关闭 popover 不丢状态；打开主窗口不会重复启动轮询；App 退出时连接可控关闭。', permission:'本机进程；无新外部写能力。', failure:'Runtime 与 AppDelegate 各保留一套 timer/cache，制造双事实源。', rollback:'旧编排 facade 兼容模式。', depends:'P1.2,P1.4,P1.5,P1.6' },
+            { id:'P1.7', title:'建立 Runtime Actor、RefreshCoordinator 与 UI facade', why:'主窗口和菜单栏需要共享同一事实与刷新生命周期，不能各自重复连接 GitHub、App Server 和 SSH；现阶段也没有必要承担通用 daemon 的 IPC 复杂度。', actions:['定义 Runtime Actor 的生命周期、RefreshCoordinator、连接所有权、取消与重连语义。','把 adapters、store、policy、timer 和 projection stream 所有权移到 runtime/core。','AppDelegate 只负责应用生命周期、订阅 projection 和转发 typed intent。'], files:'ProjectControlRuntime、RefreshCoordinator、AppFacade、AppDelegate 迁移。', output:'单一后台状态源与兼容 UI 接口。', evidence:'关闭 popover不丢状态；打开主窗口不会重复启动轮询；App 退出时连接可控关闭。', permission:'本机进程；无新外部写能力。', failure:'Runtime 与 AppDelegate 各保留一套 timer/cache，制造双事实源。', rollback:'旧编排 facade 兼容模式。', depends:'P1.2,P1.4,P1.5,P1.6' },
             { id:'P1.8', title:'把现有菜单栏无行为迁移到新内核', why:'先证明架构替换不影响现有用户，再开发桌面主窗口。', actions:['逐项迁移 GitHub、Session、Roadmap、审核机和缓存读取。','保持刷新周期、视觉、快捷键和错误文案。','运行旧测试、能耗采样和安装候选对比。'], files:'AppDelegate、DashboardViewController 与 facade。', output:'基于新内核的菜单栏候选版。', evidence:'现有功能清单零回退；空闲能耗不高于基线。', permission:'候选构建；正式安装替换另授权。', failure:'架构迁移顺便改 UI/行为，导致无法定位回归来源。', rollback:'切换 feature flag 回旧 facade。', depends:'P1.7' }
           ]
         },
