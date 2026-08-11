@@ -1,29 +1,28 @@
 # P1 后续顺序与当前缺口重评估
 
-评估时间：2026-08-11 CST
+评估时间：2026-08-12 CST
 
-基线：`sixlab-pr-control@7d50c14e9e926a3bc3a3a31c9554ff6f63403642`
+基线：`sixlab-pr-control@c7ee54ae1e8c33318a414e670fd80c57faa8df87`
 
 ## 结论
 
-P1.4-A 已关闭，P1 主依赖顺序仍保持 **P1.5 persistence -> P1.6 policy ->
-P1.7 runtime -> P1.8/R01.4 cutover**。当前不应提前实现 Policy、Runtime、UI 或真实
-provider 接线；下一工作包必须先把 P1.4 的纯 reducer 变成可审计、可事务提交、可重建
-的持久化事实链。
+P1.4-A 与 P1.5 已关闭，P1 主依赖顺序继续保持 **P1.6 policy -> P1.7 runtime ->
+P1.8/R01.4 cutover**。当前下一工作包是 P1.6 Policy Engine；不得提前实现 Runtime、UI、
+真实 provider 接线、command execution 或生产 read-path cutover。
 
-P1.5 不拆成一个“空 schema PR”和一个不确定的后续 PR。它的退出门必须同时包含：
-版本化事件、SQLite 追加账本、同事务 projection 更新、确定性 replay、migration、备份／
-恢复以及故障注入。内部可以按 schema -> transaction -> rebuild 的顺序实现，但不能在
-只有表结构或 append API 时宣称 P1.5 完成。
+P1.6 不应只补一组名词或 UI 按钮。它的退出门必须同时包含：typed CommandIntent／
+PolicyDecision、exact required facts、actor/environment scope、merge/deploy/secret-use 权限
+不推导、confirmation binding、确定性 fail-closed evaluator 和负向回归。真实 token
+issuance/consumption、CommandBus、Runtime Actor 与 side effect 继续留到 P1.7。
 
 ## 重新确认的执行顺序
 
-1. **P1.5 SQLite 事件账本与 projection rebuild（NEXT）**
+1. **P1.5 SQLite 事件账本与 projection rebuild（CLOSED）**
    - 版本化 normalization event/decision payload 与单调 ledger position。
    - append-only event、expected-generation projection CAS 和 checkpoint 同一事务提交。
    - event/correlation 幂等、精确大小写资源身份、逐资源隔离。
    - schema migration、replay/rebuild、备份、损坏／中断恢复和 redaction。
-2. **P1.6 Policy Engine**
+2. **P1.6 Policy Engine（NEXT）**
    - 补齐 `CommandIntent`／`PolicyDecision`、required facts、actor/environment scope。
    - allow/confirm/deny 及 merge、deploy、secret-use 相互独立的 fail-closed 反例。
 3. **P1.7 Runtime Actor + RefreshCoordinator**
@@ -52,30 +51,35 @@ normalizer/store/runtime，但不阻塞 P1.5。
 - PR #14 已合并至 main `7d50c14e9e926a3bc3a3a31c9554ff6f63403642`；PR head 与
   合并后 main 的 CircleCI 均成功，merged-main 完整 Native Harness 通过。
 
+### P1.5
+
+- schema v2 SQLite ledger 已包含 typed event/decision、materialized projection、cursor 和
+  checkpoint；v1→v2 migration 与未来版本 fail-closed 已验证。
+- event append、decision、expected-generation projection CAS 和 cursor 在同一 transaction
+  内提交；幂等、并发 writer 与两处 fault injection 已覆盖。
+- full/checkpoint rebuild 只复用 `StateNormalizer`；checkpoint 必须等于 ledger 到对应位置的
+  确定性结果，损坏／漂移不会覆盖有效 projection。
+- backup/recovery、0600/0700 私有权限、typed codec、隐私反例和跨进程 reopen 已关闭。
+- PR #15 已 squash merge 为 `c7ee54ae1e8c33318a414e670fd80c57faa8df87`；PR head 与
+  main CircleCI 均成功，actual merge commit 完整 Native Harness 通过。
+- P1.6 只能通过 `DurableProjectionReading.projection(for:)` 的 exact-resource read-only port
+  消费事实；不得读取 SQLite internals 或推断 sibling resource 健康。
+
 ## 当前缺少的内容
 
-### P1.5 必须补齐
+### P1.6 必须补齐
 
-- `ProjectControlStore` 尚无 SQLite system-library 接线、数据库路径／权限和连接策略。
-- 尚无 schema metadata、顺序稳定的 ledger position、DDL migration 或未来版本
-  fail-closed 行为。
-- `NormalizationEvent<Value>`／`NormalizationDecision` 可 Codable，但尚无持久化
-  record 的 payload type/version、value type discriminator 与兼容策略。
-- `AuditEvent.attributes` 只允许两个 shadow 计数字段，不能被滥用为 normalization
-  payload；尚缺受保护 payload 与 value-free audit decision 的明确分层。
-- 尚无 event ID／correlation ID 幂等约束、精确资源 key 约束或 ledger 顺序保证。
-- 尚无 event append、expected-generation projection CAS、last-applied position 的同事务
-  原子边界；也无中途故障回滚测试。
-- 尚无按 ledger replay 的 projection rebuild、空库重建、重复 replay、断点恢复或原子
-  替换旧 projection。
-- 尚无数据库备份、损坏检测、恢复、schema migration、并发 writer/lock 行为和跨进程
-  reopen 测试。
-- 尚无持久化层隐私扫描／redaction；provider message、value 和审计 decision 的落盘边界
-  未经证明。
+- `CommandIntent`／`PolicyDecision`、required facts、actor/environment scope、risk 与
+  confirmation binding 尚缺。
+- 尚无 merge、deploy、secret-use 独立 rule matrix；green CI、Registry capability、已有
+  approval/confirmation 等单一事实仍缺 fail-closed 反例。
+- 尚无 exact-resource durable projection 到 typed policy fact 的窄消费层。
+- 尚无同输入确定性、missing/stale/partial/unreachable/unknown、head/base/environment/
+  capability/fact drift 和 confirmation expiry/version 的完整回归。
+- 尚无 value-free policy decision／confirmation privacy contract 或 P1.7 消费端口文档。
 
-### P1.6–P1.8 仍缺
+### P1.7–P1.8 仍缺
 
-- `CommandIntent`／`PolicyDecision`、required facts、risk/confirmation token 尚缺。
 - 无 Runtime Actor、projection subscription、统一 cancellation/reconnect。
 - AppDelegate 仍拥有 4 个 Timer 与 `refreshingRepositories` Set。
 - 六路 Facade 仍为 `legacyOnly`／`shadow`，无 `candidatePrimary` 和退休记录。
@@ -88,11 +92,13 @@ normalizer/store/runtime，但不阻塞 P1.5。
 
 ## 停止线
 
-若 P1.5 需要真实 timer、AppDelegate/runtime 所有权、UI、provider 外部读取、Policy
-决策、Registry v1 格式变化、安装或部署才能成立，应停止并重新拆分。若只创建数据库／
-表但不能从 ledger 确定性重建 projection，也不得宣称 P1.5 完成。
+若 P1.6 需要真实 timer、AppDelegate/runtime 所有权、UI、provider 外部读取、SQLite
+internals、command execution、secret retrieval、Registry v1 正式配置变化、安装或部署才能
+成立，应停止并重新拆分。若 merge/deploy/secret-use 可以相互推导，或 missing/unknown/
+partial/unreachable/stale 能默认 allow，也不得宣称 P1.6 完成。
 
 ## 下一执行入口
 
 - [P1.4 模块关闭记录](./P1.4-STATE-NORMALIZER-MODULE-CLOSURE.md)
-- [P1.5 SQLite Event Ledger START Handoff](./P1.5-SQLITE-EVENT-LEDGER-START-HANDOFF.md)
+- [P1.5 模块关闭记录](./P1.5-SQLITE-EVENT-LEDGER-MODULE-CLOSURE.md)
+- [P1.6 Policy Engine START Handoff](./P1.6-POLICY-ENGINE-START-HANDOFF.md)
