@@ -2,13 +2,13 @@
 
 评估时间：2026-08-12 CST
 
-基线：`sixlab-pr-control@c7ee54ae1e8c33318a414e670fd80c57faa8df87`
+基线：`sixlab-pr-control@d02ffea3e9bc92d7d5ba94d490740b580d9fd89c`
 
 ## 结论
 
-P1.4-A 与 P1.5 已关闭，P1 主依赖顺序继续保持 **P1.6 policy -> P1.7 runtime ->
-P1.8/R01.4 cutover**。当前下一工作包是 P1.6 Policy Engine；不得提前实现 Runtime、UI、
-真实 provider 接线、command execution 或生产 read-path cutover。
+P1.4-A、P1.5 与 P1.6 已关闭，P1 主依赖顺序进入 **P1.7 runtime -> P1.8/R01.4
+cutover**。当前下一工作包是 P1.7 Runtime Actor + RefreshCoordinator；不得提前切 Facade、
+安装 App、接真实 command/provider 或启动 P2 主窗口。
 
 P1.6 不应只补一组名词或 UI 按钮。它的退出门必须同时包含：typed CommandIntent／
 PolicyDecision、exact required facts、actor/environment scope、merge/deploy/secret-use 权限
@@ -22,10 +22,10 @@ issuance/consumption、CommandBus、Runtime Actor 与 side effect 继续留到 P
    - append-only event、expected-generation projection CAS 和 checkpoint 同一事务提交。
    - event/correlation 幂等、精确大小写资源身份、逐资源隔离。
    - schema migration、replay/rebuild、备份、损坏／中断恢复和 redaction。
-2. **P1.6 Policy Engine（NEXT）**
+2. **P1.6 Policy Engine（CLOSED）**
    - 补齐 `CommandIntent`／`PolicyDecision`、required facts、actor/environment scope。
    - allow/confirm/deny 及 merge、deploy、secret-use 相互独立的 fail-closed 反例。
-3. **P1.7 Runtime Actor + RefreshCoordinator**
+3. **P1.7 Runtime Actor + RefreshCoordinator（NEXT）**
    - 单一拥有 adapters、timers、cancellation、store、policy 和 projection stream。
    - 到这里才迁移 AppDelegate 的多 timer／Set 去重逻辑，避免形成双 owner。
 4. **P1.8 + R01.4 首个只读切流**
@@ -67,21 +67,18 @@ normalizer/store/runtime，但不阻塞 P1.5。
 
 ## 当前缺少的内容
 
-### P1.6 必须补齐
+### P1.6 已补齐
 
-- `CommandIntent`／`PolicyDecision`、required facts、actor/environment scope、risk 与
-  confirmation binding 尚缺。
-- 尚无 merge、deploy、secret-use 独立 rule matrix；green CI、Registry capability、已有
-  approval/confirmation 等单一事实仍缺 fail-closed 反例。
-- 尚无 exact-resource durable projection 到 typed policy fact 的窄消费层。
-- 尚无同输入确定性、missing/stale/partial/unreachable/unknown、head/base/environment/
-  capability/fact drift 和 confirmation expiry/version 的完整回归。
-- 尚无 value-free policy decision／confirmation privacy contract 或 P1.7 消费端口文档。
+- typed intent/decision/fact/confirmation、三类 action 不互相授权、exact durable fact reader、
+  deterministic fail-closed matrix 与 privacy/architecture regression 已进入 main。
+- PR #17 已 merge 为 `d02ffea3e9bc92d7d5ba94d490740b580d9fd89c`；PR/main CI 与
+  actual merge commit Native Harness 均成功。
 
 ### P1.7–P1.8 仍缺
 
 - 无 Runtime Actor、projection subscription、统一 cancellation/reconnect。
 - AppDelegate 仍拥有 4 个 Timer 与 `refreshingRepositories` Set。
+- confirmation token 尚无 authoritative issuance、durable replay/consumption 或 CommandBus owner。
 - 六路 Facade 仍为 `legacyOnly`／`shadow`，无 `candidatePrimary` 和退休记录。
 
 ### 延后到 P2.2
@@ -92,13 +89,14 @@ normalizer/store/runtime，但不阻塞 P1.5。
 
 ## 停止线
 
-若 P1.6 需要真实 timer、AppDelegate/runtime 所有权、UI、provider 外部读取、SQLite
-internals、command execution、secret retrieval、Registry v1 正式配置变化、安装或部署才能
-成立，应停止并重新拆分。若 merge/deploy/secret-use 可以相互推导，或 missing/unknown/
-partial/unreachable/stale 能默认 allow，也不得宣称 P1.6 完成。
+若 P1.7 形成第二个 timer/in-flight/confirmation/command owner，或需要真实 provider command、
+secret retrieval、Facade 切流、安装或部署才能成立，应停止并重新拆分。corrupt/unknown journal、
+late generation 或重复 token/command 不得被弱化为 safe-to-execute。
 
 ## 下一执行入口
 
 - [P1.4 模块关闭记录](./P1.4-STATE-NORMALIZER-MODULE-CLOSURE.md)
 - [P1.5 模块关闭记录](./P1.5-SQLITE-EVENT-LEDGER-MODULE-CLOSURE.md)
 - [P1.6 Policy Engine START Handoff](./P1.6-POLICY-ENGINE-START-HANDOFF.md)
+- [P1.6 Policy Engine 模块关闭记录](./P1.6-POLICY-ENGINE-MODULE-CLOSURE.md)
+- [P1.7 Runtime Actor START Handoff](./P1.7-RUNTIME-ACTOR-START-HANDOFF.md)
