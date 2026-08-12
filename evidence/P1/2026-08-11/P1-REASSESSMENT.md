@@ -7,8 +7,8 @@
 ## 结论
 
 P1.4-A、P1.5、P1.6 与 P1.7 已关闭，P1 主依赖顺序进入 **P1.8/R01.4 cutover**。
-当前工作包已选择 Roadmap 作为第一次只读 projection 的 shadow/candidate 切流；不得提前
-安装 App、接真实 command/provider 或启动 P2 主窗口。
+当前工作包已选择 Roadmap 作为第一次只读 projection，并形成 Ready PR #21；正在等待
+current-head 独立审查与 CI。不得提前安装 App、接真实 command/provider 或启动 P2 主窗口。
 
 P1.6 不应只补一组名词或 UI 按钮。它的退出门必须同时包含：typed CommandIntent／
 PolicyDecision、exact required facts、actor/environment scope、merge/deploy/secret-use 权限
@@ -106,3 +106,4 @@ late generation 或重复 token/command 不得被弱化为 safe-to-execute。
 - [P1.7 Runtime Actor 执行报告](./P1.7-RUNTIME-ACTOR-EXECUTION-REPORT.md)
 - [P1.7 Runtime Actor 模块关闭记录](./P1.7-RUNTIME-ACTOR-MODULE-CLOSURE.md)
 - [P1.8 Roadmap 首个只读切流 START Handoff](../2026-08-12/P1.8-ROADMAP-READ-CUTOVER-START-HANDOFF.md)
+- [P1.8 Roadmap 首个只读切流执行报告](../2026-08-12/P1.8-ROADMAP-READ-CUTOVER-EXECUTION-REPORT.md)
