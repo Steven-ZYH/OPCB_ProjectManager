@@ -2,13 +2,13 @@
 
 评估时间：2026-08-12 CST
 
-基线：`sixlab-pr-control@d02ffea3e9bc92d7d5ba94d490740b580d9fd89c`
+基线：`sixlab-pr-control@7af0430230bebd4c4a1477b48cd9b624072e0b76`
 
 ## 结论
 
 P1.4-A、P1.5、P1.6 与 P1.7 已关闭，P1 主依赖顺序进入 **P1.8/R01.4 cutover**。
-当前下一工作包是一次一个只读 projection 的 shadow/candidate 切流；不得提前安装 App、
-接真实 command/provider 或启动 P2 主窗口。
+当前工作包已选择 Roadmap 作为第一次只读 projection 的 shadow/candidate 切流；不得提前
+安装 App、接真实 command/provider 或启动 P2 主窗口。
 
 P1.6 不应只补一组名词或 UI 按钮。它的退出门必须同时包含：typed CommandIntent／
 PolicyDecision、exact required facts、actor/environment scope、merge/deploy/secret-use 权限
@@ -29,7 +29,8 @@ issuance/consumption、CommandBus、Runtime Actor 与 side effect 继续留到 P
    - 单一拥有 adapters、timers、cancellation、store、policy 和 projection stream。
    - 到这里才迁移 AppDelegate 的多 timer／Set 去重逻辑，避免形成双 owner。
 4. **P1.8 + R01.4 首个只读切流**
-   - 一次只切一个 projection，先 shadow/candidate，再安装验收和回退观察。
+   - 首个 projection 固定为 Roadmap cache；先完成代码级 candidate-primary 与 fail-closed
+     回退，再单独进入候选构建、安装验收和回退观察。
 
 P2 主窗口仍不得提前。P1.3-B 的 App 内 Registry 管理和 repository access／default
 branch／checkout/provider/environment health projection 继续归入 P2.2；它们依赖 P1
@@ -104,3 +105,4 @@ late generation 或重复 token/command 不得被弱化为 safe-to-execute。
 - [P1.7 Runtime Actor START Handoff](./P1.7-RUNTIME-ACTOR-START-HANDOFF.md)
 - [P1.7 Runtime Actor 执行报告](./P1.7-RUNTIME-ACTOR-EXECUTION-REPORT.md)
 - [P1.7 Runtime Actor 模块关闭记录](./P1.7-RUNTIME-ACTOR-MODULE-CLOSURE.md)
+- [P1.8 Roadmap 首个只读切流 START Handoff](../2026-08-12/P1.8-ROADMAP-READ-CUTOVER-START-HANDOFF.md)
