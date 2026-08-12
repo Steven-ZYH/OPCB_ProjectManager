@@ -6,9 +6,9 @@
 
 ## 结论
 
-P1.4-A、P1.5 与 P1.6 已关闭，P1 主依赖顺序进入 **P1.7 runtime -> P1.8/R01.4
-cutover**。P1.7 已形成 Ready PR #19，正在等待 current-head 独立审查与 CI；不得提前切
-Facade、安装 App、接真实 command/provider 或启动 P2 主窗口。
+P1.4-A、P1.5、P1.6 与 P1.7 已关闭，P1 主依赖顺序进入 **P1.8/R01.4 cutover**。
+当前下一工作包是一次一个只读 projection 的 shadow/candidate 切流；不得提前安装 App、
+接真实 command/provider 或启动 P2 主窗口。
 
 P1.6 不应只补一组名词或 UI 按钮。它的退出门必须同时包含：typed CommandIntent／
 PolicyDecision、exact required facts、actor/environment scope、merge/deploy/secret-use 权限
@@ -25,7 +25,7 @@ issuance/consumption、CommandBus、Runtime Actor 与 side effect 继续留到 P
 2. **P1.6 Policy Engine（CLOSED）**
    - 补齐 `CommandIntent`／`PolicyDecision`、required facts、actor/environment scope。
    - allow/confirm/deny 及 merge、deploy、secret-use 相互独立的 fail-closed 反例。
-3. **P1.7 Runtime Actor + RefreshCoordinator（IN REVIEW）**
+3. **P1.7 Runtime Actor + RefreshCoordinator（CLOSED）**
    - 单一拥有 adapters、timers、cancellation、store、policy 和 projection stream。
    - 到这里才迁移 AppDelegate 的多 timer／Set 去重逻辑，避免形成双 owner。
 4. **P1.8 + R01.4 首个只读切流**
@@ -74,12 +74,13 @@ normalizer/store/runtime，但不阻塞 P1.5。
 - PR #17 已 merge 为 `d02ffea3e9bc92d7d5ba94d490740b580d9fd89c`；PR/main CI 与
   actual merge commit Native Harness 均成功。
 
-### P1.7–P1.8 仍缺
+### P1.8 仍缺
 
 - P1.7 Runtime Actor、projection stream、统一 cancellation、business schedule ownership、
-  authoritative confirmation 和 durable command replay 已在 PR #19 实现，但尚未独立批准或合并。
-- P1.7 仍只接 closed/fake executor；claim-before-execute crash window 明确保留为 `claimed`
-  unknown，不允许自动重试。
+  authoritative confirmation 和 durable command replay 已随 PR #19 合并为
+  `acca75a10ae0a707f6398f957feca42a585428f6`。
+- Runtime 仍只接 closed/fake executor；claim-before-execute crash window 明确保留为
+  `claimed` unknown，不允许自动重试。
 - 六路 Facade 仍为 `legacyOnly`／`shadow`，无 `candidatePrimary` 和退休记录。
 
 ### 延后到 P2.2
@@ -102,3 +103,4 @@ late generation 或重复 token/command 不得被弱化为 safe-to-execute。
 - [P1.6 Policy Engine 模块关闭记录](./P1.6-POLICY-ENGINE-MODULE-CLOSURE.md)
 - [P1.7 Runtime Actor START Handoff](./P1.7-RUNTIME-ACTOR-START-HANDOFF.md)
 - [P1.7 Runtime Actor 执行报告](./P1.7-RUNTIME-ACTOR-EXECUTION-REPORT.md)
+- [P1.7 Runtime Actor 模块关闭记录](./P1.7-RUNTIME-ACTOR-MODULE-CLOSURE.md)
