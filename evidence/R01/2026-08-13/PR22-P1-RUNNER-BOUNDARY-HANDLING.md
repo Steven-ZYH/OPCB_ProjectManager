@@ -9,7 +9,7 @@
 - Post-merge-only runner commit: `e0c1817e27015945572ccdc4c878655c8aa26715`
 - CircleCI-retirement commit: `ae5fae559ed1b8e66422dbe4e53144e7b18c73f0`
 - CircleCI-connection closure commit: `71e3c8353396fa7d221a2f5e980f5d1645b1190c`
-- Status: `READY_FOR_CURRENT_HEAD_REVIEW`, not merge-authorized
+- Status: merged; post-merge local CI run skipped by merge commit message
 
 ## Blocker handled
 
@@ -43,15 +43,15 @@ Any future native self-hosted lane requires a separate design using an ephemeral
 - Review-worker smoke: PASS
 - App build, product identity, App icon, exact SourceBinding, and strict codesign: PASS
 
-Local CI machine proof is also available from GitHub Actions run `31586647799`, attempt 2, on prior head `d2f1c8a0d554ce5c71c4d2ed45844d12fea6868d`: checkout, exact RevisionGuard, native Harness, post-checkout, and job completion all succeeded. The current workflow intentionally runs only after merge on a `main` push, so this prior run proves the machine/toolchain path, not execution of current PR head `e0c1817e…`.
+Local CI machine proof is also available from GitHub Actions run `31586647799`, attempt 2, on prior head `d2f1c8a0d554ce5c71c4d2ed45844d12fea6868d`: checkout, exact RevisionGuard, native Harness, post-checkout, and job completion all succeeded. The final workflow intentionally runs only after merge on a `main` push, so this prior run proves the machine/toolchain path, not execution of final PR head `71e3c83…`.
 
-## Live GitHub state after push
+## Final pre-merge GitHub state
 
 - Open: yes
 - Draft: no
 - Mergeable: yes
-- Requested reviewers: `StevenZYHhome`, `miaopantao`
-- Current-head reviews: none; the valid `StevenZYHhome` approval on `e0c1817e…` became stale after the CI-retirement commits
+- Requested reviewers: none after completion
+- Exact current-head approvals: `StevenZYHhome`, `miaopantao`
 - Reviewer identity correction: `StevenZYHhome` is the repository-configured review-machine account and is distinct from PR author `Steven-ZYH`; its current-head approval is valid independent review evidence
 - Unresolved review thread: one, anchored to the deleted old PR workflow; it was intentionally not author-resolved
 - Current-head status contexts: none; CircleCI emitted no status for `71e3c83…`
@@ -60,4 +60,31 @@ The current CI authority is the local CI machine: exact-head local acceptance be
 
 ## Gate separation
 
-This handling pushed the author fix and CI-authority cutover, then requested fresh exact-head reviews from the configured review-machine account and `miaopantao`. It did not dismiss reviews, resolve reviewer threads, merge PR #22, install or replace `/Users/steven/Applications/OPCB Project Manager.app`, enroll real Secrets, publish audit data, modify runner registration, or deploy anything.
+Before merge authorization, this handling pushed the author fix and CI-authority cutover, then obtained fresh exact-head reviews from the configured review-machine account and `miaopantao`. It did not dismiss reviews or resolve reviewer threads. The later authorized merge is recorded separately below; App installation, Secret enrollment, audit publication, runner mutation, and deployment remained outside scope.
+
+## Merge closure
+
+The user explicitly authorized merge after the final status refresh.
+
+- Final PR head: `71e3c8353396fa7d221a2f5e980f5d1645b1190c`
+- Final base before merge: `834a99e418278a3809e3a0e274bf4850b67e89c0`
+- GitHub aggregate before merge: `APPROVED`, `MERGEABLE`, `CLEAN`
+- Exact-head approvals: `StevenZYHhome`, `miaopantao`
+- Final merge tree: `9b8ffe1810b22f19abbb34e7479fd4b1f70fb29f`
+- Merge method: squash with expected-head protection
+- Merged main commit: `02b5db04b7609dd25c813768f57af73a0005eb57`
+- PR state after merge: closed and merged
+- Live `origin/main` after fetch: `02b5db04b7609dd25c813768f57af73a0005eb57`
+
+The post-merge `Local Mac Post-merge Native CI` workflow did not create a run for the merged main commit. The squash commit message contains the source commit subject `ci: finalize CircleCI retirement [ci skip]`. GitHub applies `[ci skip]` found in a commit message to workflows triggered by `push`, so the new `main`-push workflow was skipped. Repeated GitHub Actions queries for commit `02b5db04…` returned no run.
+
+Therefore the closure is:
+
+- merge: PASS;
+- source/main synchronization: PASS;
+- pre-merge exact-head native validation: PASS;
+- post-merge local CI: `SKIPPED / NOT RUN`;
+- App installation: not performed;
+- Secret enrollment, audit publication, runner mutation, deployment, and release: not performed.
+
+Correcting the skipped post-merge validation would require a new authorized `main` push or a separately reviewed workflow change. It is not implied by the merge authorization and was not performed in this closure.
