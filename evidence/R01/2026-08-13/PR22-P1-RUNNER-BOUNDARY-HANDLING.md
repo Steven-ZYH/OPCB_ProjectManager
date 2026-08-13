@@ -4,10 +4,11 @@
 - Repository: `Steven-ZYH/sixlab-pr-control`
 - PR: [#22 — feat: add invoke-only secret access and project indexes](https://github.com/Steven-ZYH/sixlab-pr-control/pull/22)
 - Base: `main@834a99e418278a3809e3a0e274bf4850b67e89c0`
-- Current head: `ae5fae559ed1b8e66422dbe4e53144e7b18c73f0`
+- Current head: `71e3c8353396fa7d221a2f5e980f5d1645b1190c`
 - Runner-removal commit: `7182906d537cc10507f673626a2019e9372eda79`
 - Post-merge-only runner commit: `e0c1817e27015945572ccdc4c878655c8aa26715`
 - CircleCI-retirement commit: `ae5fae559ed1b8e66422dbe4e53144e7b18c73f0`
+- CircleCI-connection closure commit: `71e3c8353396fa7d221a2f5e980f5d1645b1190c`
 - Status: `READY_FOR_CURRENT_HEAD_REVIEW`, not merge-authorized
 
 ## Blocker handled
@@ -32,9 +33,9 @@ Any future native self-hosted lane requires a separate design using an ephemeral
 ## Exact-head validation
 
 - `git diff --check origin/main...HEAD`: PASS
-- `git merge-tree --write-tree origin/main HEAD`: PASS, tree `8c0c4b58788e0f2bb430708336db30ac24f97f5f`
+- `git merge-tree --write-tree origin/main HEAD`: PASS, tree `9b8ffe1810b22f19abbb34e7479fd4b1f70fb29f`
 - `LocalMacWorkflowBoundarySmoke`: PASS, main push only
-- RevisionGuard: PASS at `ae5fae559ed1b8e66422dbe4e53144e7b18c73f0`
+- RevisionGuard: PASS at `71e3c8353396fa7d221a2f5e980f5d1645b1190c`
 - Swift Package tests: 112 PASS, 0 failures
 - Complete native smoke/render harness: PASS
 - `NativeSecretControlSmoke`: PASS
@@ -50,12 +51,12 @@ Local CI machine proof is also available from GitHub Actions run `31586647799`, 
 - Draft: no
 - Mergeable: yes
 - Requested reviewers: `StevenZYHhome`, `miaopantao`
-- Current-head reviews: none; the valid `StevenZYHhome` approval on `e0c1817e…` became stale after the CircleCI-retirement push
+- Current-head reviews: none; the valid `StevenZYHhome` approval on `e0c1817e…` became stale after the CI-retirement commits
 - Reviewer identity correction: `StevenZYHhome` is the repository-configured review-machine account and is distinct from PR author `Steven-ZYH`; its current-head approval is valid independent review evidence
 - Unresolved review thread: one, anchored to the deleted old PR workflow; it was intentionally not author-resolved
-- Current-head status contexts: none; CircleCI emitted no status for `ae5fae5…`
+- Current-head status contexts: none; CircleCI emitted no status for `71e3c83…`
 
-The current CI authority is the local CI machine: exact-head local acceptance before merge and the self-hosted `main`-push workflow after merge. CircleCI is no longer the repository-native CI gate. Provider-side Stop Building/disconnection remains a separate administrative state; repository retirement alone does not prove it.
+The current CI authority is the local CI machine: exact-head local acceptance before merge and the self-hosted `main`-push workflow after merge. CircleCI is no longer the repository-native CI gate. Live GitHub repository inspection found no remaining webhooks and no remaining deploy keys, which verifies the repository-side CircleCI connection removal without deleting historical CircleCI project data.
 
 ## Gate separation
 
