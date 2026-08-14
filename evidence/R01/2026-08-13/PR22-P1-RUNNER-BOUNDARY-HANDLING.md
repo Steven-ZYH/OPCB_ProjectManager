@@ -95,17 +95,17 @@ The user separately and explicitly authorized changing the persistent runner's
 trusted event model after the `push`-triggered run was skipped. The follow-up is
 [PR #24 — ci: make post-merge local Mac validation skip-proof](https://github.com/Steven-ZYH/sixlab-pr-control/pull/24).
 
-- Base: `main@02b5db04b7609dd25c813768f57af73a0005eb57`
-- Current head: `199a5a99a3289c48857f997d26e03b1367455b2b`
+- Base: `main@f37dbd48c5fa3be5752aaecf560d295c2e8c9046`
+- Current head: `a568b80c1da960bef99c4464f06d2806fe5db33d`
 - State: Open, Ready for review, not merged
 - Requested reviewers: `StevenZYHhome`, `miaopantao`
-- Review state: `miaopantao` approved prior head `281bc7e…`; that approval
-  became historical after the trigger-lock update to `199a5a99…`, so fresh
-  current-head approval remains pending
+- Review state: `miaopantao` approved exact current head `a568b80…` against
+  `main@f37dbd4…`; `StevenZYHhome` remains requested because its prior approval
+  is historical after the rebase
 - Local full-Harness result on the exact clean head: PASS
-- RevisionGuard and SourceBinding: PASS at `199a5a99…`, `state=clean`
-- Current-main merge tree: `b80b59eeab4a654cbd7d42119ec52c6e2b1784eb`
-- GitHub Actions runs on the PR head: none; the lane remains post-merge only
+- RevisionGuard and SourceBinding: PASS at `a568b80…`, `state=clean`
+- Current-main merge tree: `b0f90732e655ae8100cb6be572418f759c850bbb`
+- GitHub-hosted PR CI run: `31777388329`, `BLOCKED / NOT STARTED`
 
 The proposed workflow uses `pull_request_target: closed` for PRs targeting
 `main`, allocates the self-hosted job only when GitHub reports `merged == true`,
@@ -114,6 +114,21 @@ permissions remain read-only, checkout credentials are not persisted, and the
 static regression locks the complete trigger block while rejecting candidate
 head/fork/merge refs and all other workflow triggers. Consecutive merged
 revisions queue rather than cancelling an in-progress validation.
+
+PR #25 advanced `main` after the initial PR #24 review and introduced the
+GitHub-hosted `pr-native.yml` candidate lane plus the `CI 未配置 / CI 未知`
+product semantics. PR #24 became `CONFLICTING / DIRTY`; it was rebased onto
+`f37dbd4…` and the overlapping README, CI runbook, and boundary smoke were
+resolved by preserving both CI lanes as separate contracts. No PR #25 product
+code was dropped. The rebase was pushed with an exact force-with-lease bound to
+the prior remote head `199a5a99…`.
+
+The resulting GitHub-hosted check failed before any runner or step was
+allocated: job `94695590495` has `steps=[]`, `runner_id=0`, and no logs. GitHub
+records an external account-level allocation blocker in the private Actions
+annotation. This is not a code-test failure and is not a passing check. Routing
+candidate code to the persistent Mac would violate the approved security
+boundary; account remediation remains a separate external gate.
 
 Draft PR #23 independently proposes `repository_dispatch` for trusted-main
 remote dispatch and overlaps the same workflow/test/docs files. PR #24 does not
