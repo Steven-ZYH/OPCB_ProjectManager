@@ -99,6 +99,9 @@ trusted event model after the `push`-triggered run was skipped. The follow-up is
 - Current head: `199a5a99a3289c48857f997d26e03b1367455b2b`
 - State: Open, Ready for review, not merged
 - Requested reviewers: `StevenZYHhome`, `miaopantao`
+- Review state: `miaopantao` approved prior head `281bc7e…`; that approval
+  became historical after the trigger-lock update to `199a5a99…`, so fresh
+  current-head approval remains pending
 - Local full-Harness result on the exact clean head: PASS
 - RevisionGuard and SourceBinding: PASS at `199a5a99…`, `state=clean`
 - Current-main merge tree: `b80b59eeab4a654cbd7d42119ec52c6e2b1784eb`
