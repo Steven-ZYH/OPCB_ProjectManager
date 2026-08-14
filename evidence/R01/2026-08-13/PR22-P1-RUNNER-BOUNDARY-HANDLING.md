@@ -88,3 +88,35 @@ Therefore the closure is:
 - Secret enrollment, audit publication, runner mutation, deployment, and release: not performed.
 
 Correcting the skipped post-merge validation would require a new authorized `main` push or a separately reviewed workflow change. It is not implied by the merge authorization and was not performed in this closure.
+
+## Follow-up trigger repair (2026-08-14)
+
+The user separately and explicitly authorized changing the persistent runner's
+trusted event model after the `push`-triggered run was skipped. The follow-up is
+[PR #24 — ci: make post-merge local Mac validation skip-proof](https://github.com/Steven-ZYH/sixlab-pr-control/pull/24).
+
+- Base: `main@02b5db04b7609dd25c813768f57af73a0005eb57`
+- Current head: `199a5a99a3289c48857f997d26e03b1367455b2b`
+- State: Open, Ready for review, not merged
+- Requested reviewers: `StevenZYHhome`, `miaopantao`
+- Local full-Harness result on the exact clean head: PASS
+- RevisionGuard and SourceBinding: PASS at `199a5a99…`, `state=clean`
+- Current-main merge tree: `b80b59eeab4a654cbd7d42119ec52c6e2b1784eb`
+- GitHub Actions runs on the PR head: none; the lane remains post-merge only
+
+The proposed workflow uses `pull_request_target: closed` for PRs targeting
+`main`, allocates the self-hosted job only when GitHub reports `merged == true`,
+and checks out only `github.event.pull_request.merge_commit_sha`. Repository
+permissions remain read-only, checkout credentials are not persisted, and the
+static regression locks the complete trigger block while rejecting candidate
+head/fork/merge refs and all other workflow triggers. Consecutive merged
+revisions queue rather than cancelling an in-progress validation.
+
+Draft PR #23 independently proposes `repository_dispatch` for trusted-main
+remote dispatch and overlaps the same workflow/test/docs files. PR #24 does not
+absorb or modify #23. If #23 merges first, #24 must be rebased, revalidated, and
+reviewed again as an explicit security-policy choice; the two trigger models
+must not be combined implicitly.
+
+This follow-up has not merged, installed or replaced the App, enrolled secrets,
+published audit data, updated the Worker, or deployed any service.
