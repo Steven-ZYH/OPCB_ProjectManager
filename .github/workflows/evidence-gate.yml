@@ -58,7 +58,7 @@ jobs:
               actual="$(sha256sum "$target" | awk '{print $1}')"
               if [[ "$actual" != "$expected" ]]; then
                 echo "::error::$sumfile: 校验失败 — $filename"
-                ((ERRORS++))
+                ERRORS=$((ERRORS + 1))
               fi
             done < "$sumfile"
             
@@ -87,7 +87,7 @@ jobs:
           CHECKED=0
           
           while IFS= read -r -d '' mdfile; do
-            ((CHECKED++))
+            CHECKED=$((CHECKED + 1))
             basename="$(basename "$mdfile")"
             
             # 跳过 README
@@ -96,7 +96,7 @@ jobs:
             # 非空检查
             if [[ ! -s "$mdfile" ]]; then
               echo "::error::$mdfile: 文件为空"
-              ((ERRORS++))
+              ERRORS=$((ERRORS + 1))
               continue
             fi
             
@@ -104,7 +104,7 @@ jobs:
             first_line="$(head -1 "$mdfile")"
             if [[ "$first_line" != "# "* ]]; then
               echo "::error::$mdfile: 首行不是 H1 标题"
-              ((ERRORS++))
+              ERRORS=$((ERRORS + 1))
             fi
           done < <(find evidence -type f -name "*.md" -print0 2>/dev/null)
           
