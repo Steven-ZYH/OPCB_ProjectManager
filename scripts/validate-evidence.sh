@@ -33,7 +33,7 @@ validate_checksum_files() {
     local bad_format=0
 
     while IFS= read -r line; do
-      ((lineno++))
+      lineno=$((lineno + 1))
       # 跳过空行
       [[ -z "$line" ]] && continue
       # 标准格式: 64位hex + 两个空格(或 *binary标记) + 文件名
