@@ -6,3 +6,6 @@
 
 # Local recovery carriers may contain private repository and cache snapshots.
 evidence/**/private/
+
+# Automation runtime mirror data (not deliverables)
+automation/**/.runtime/

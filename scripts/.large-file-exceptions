@@ -1,0 +1,4 @@
+# 已提交的历史大文件豁免列表
+# 每行一个相对路径，仅用于 grandfather 已有产物
+# 新文件不应加入此列表，应使用 LFS 或拆分
+evidence/opcb-repository-rename/2026-08-06-precutover/repository-all-refs.bundle
