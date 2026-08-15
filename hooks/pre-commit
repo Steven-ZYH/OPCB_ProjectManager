@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# pre-commit hook — 提交前自动运行证据文件格式验证
+# 安装方式: git config core.hooksPath hooks
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+VALIDATE_SCRIPT="$REPO_ROOT/scripts/validate-evidence.sh"
+
+# 如果验证脚本不存在，跳过（首次克隆或脚本被删除时不阻塞提交）
+if [[ ! -x "$VALIDATE_SCRIPT" ]]; then
+  echo "pre-commit: 验证脚本不存在 ($VALIDATE_SCRIPT)，跳过验证"
+  exit 0
+fi
+
+echo "pre-commit: 运行证据文件格式验证..."
+echo ""
+
+if "$VALIDATE_SCRIPT"; then
+  echo ""
+  echo "pre-commit: 验证通过，允许提交"
+  exit 0
+else
+  echo ""
+  echo "pre-commit: 验证失败，提交已中止"
+  echo "  修复上述错误后重新提交，或使用 --no-verify 跳过验证"
+  exit 1
+fi
