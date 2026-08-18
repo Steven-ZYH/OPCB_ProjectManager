@@ -33,7 +33,7 @@ jobs:
           set -euo pipefail
           api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA"
           for context in "证据文件格式验证" "SHA256 校验和完整性" "Markdown 证据结构检查"; do
-            curl -fsS -X POST "$api" \
+            curl -4 --http1.1 --retry 3 --retry-delay 1 -fsS -X POST "$api" \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -140,7 +140,7 @@ jobs:
           api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA"
           post_status() {
             local state="$1" context="$2" description="$3"
-            curl -fsS -X POST "$api" \
+            curl -4 --http1.1 --retry 3 --retry-delay 1 -fsS -X POST "$api" \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
