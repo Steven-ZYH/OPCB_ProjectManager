@@ -10,9 +10,13 @@ concurrency:
   group: evidence-gate-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  statuses: write
+
 jobs:
   evidence-gate:
-    name: 证据文件与完整性验证
+    name: 证据文件格式验证
     # One ephemeral runner executes the three pure validation steps in order.
     # Do not split these into parallel jobs: one one-shot runner is intentionally
     # registered for this repository, and candidate code must never land on a
@@ -21,13 +25,33 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: 初始化 required status contexts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: /bin/bash
+        run: |
+          set -euo pipefail
+          api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA"
+          for context in "证据文件格式验证" "SHA256 校验和完整性" "Markdown 证据结构检查"; do
+            curl -fsS -X POST "$api" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              --data-urlencode "state=pending" \
+              --data-urlencode "context=$context" \
+              --data-urlencode "description=Evidence Gate 正在执行串行验证" \
+              >/dev/null
+          done
+
       - name: 检出代码
         uses: actions/checkout@v4
 
       - name: 运行证据文件格式验证
+        id: evidence
         run: bash scripts/validate-evidence.sh
 
       - name: 验证所有 SHA256SUMS 文件
+        id: sha256
         shell: /bin/bash
         run: |
           set -euo pipefail
@@ -68,6 +92,7 @@ jobs:
           echo "所有 SHA256 校验和验证通过"
 
       - name: 检查证据 Markdown 文件基本结构
+        id: markdown
         shell: /bin/bash
         run: |
           set -euo pipefail
@@ -101,3 +126,35 @@ jobs:
             exit 1
           fi
           echo "所有 Markdown 证据文件结构正确"
+
+      - name: 发布 required status contexts
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RESULT: ${{ steps.evidence.outcome }}
+          SHA256_RESULT: ${{ steps.sha256.outcome }}
+          MARKDOWN_RESULT: ${{ steps.markdown.outcome }}
+        shell: /bin/bash
+        run: |
+          set -euo pipefail
+          api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA"
+          post_status() {
+            local state="$1" context="$2" description="$3"
+            curl -fsS -X POST "$api" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              --data-urlencode "state=$state" \
+              --data-urlencode "context=$context" \
+              --data-urlencode "description=$description" \
+              >/dev/null
+          }
+          state_for() {
+            [[ "$1" == "success" ]] && echo success || echo failure
+          }
+          post_status "$(state_for "$EVIDENCE_RESULT")" \
+            "证据文件格式验证" "Evidence Gate: $EVIDENCE_RESULT"
+          post_status "$(state_for "$SHA256_RESULT")" \
+            "SHA256 校验和完整性" "Evidence Gate: $SHA256_RESULT"
+          post_status "$(state_for "$MARKDOWN_RESULT")" \
+            "Markdown 证据结构检查" "Evidence Gate: $MARKDOWN_RESULT"
