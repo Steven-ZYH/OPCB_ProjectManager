@@ -37,9 +37,8 @@ jobs:
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
-              --data-urlencode "state=pending" \
-              --data-urlencode "context=$context" \
-              --data-urlencode "description=Evidence Gate 正在执行串行验证" \
+              -H "Content-Type: application/json" \
+              --data "{\"state\":\"pending\",\"context\":\"$context\",\"description\":\"Evidence Gate 正在执行串行验证\"}" \
               >/dev/null
           done
 
@@ -144,9 +143,8 @@ jobs:
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
-              --data-urlencode "state=$state" \
-              --data-urlencode "context=$context" \
-              --data-urlencode "description=$description" \
+              -H "Content-Type: application/json" \
+              --data "{\"state\":\"$state\",\"context\":\"$context\",\"description\":\"$description\"}" \
               >/dev/null
           }
           state_for() {
