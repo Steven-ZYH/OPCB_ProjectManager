@@ -28,7 +28,7 @@ jobs:
       - name: 初始化 required status contexts
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: /bin/bash
+        shell: bash
         run: |
           set -euo pipefail
           api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA"
@@ -52,7 +52,7 @@ jobs:
 
       - name: 验证所有 SHA256SUMS 文件
         id: sha256
-        shell: /bin/bash
+        shell: bash
         run: |
           set -euo pipefail
           ERRORS=0
