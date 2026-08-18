@@ -11,42 +11,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate-evidence:
-    name: 证据文件格式验证
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+  evidence-gate:
+    name: 证据文件与完整性验证
+    # One ephemeral runner executes the three pure validation steps in order.
+    # Do not split these into parallel jobs: one one-shot runner is intentionally
+    # registered for this repository, and candidate code must never land on a
+    # persistent runner.
+    runs-on: [self-hosted, macOS, ARM64, opcb-projectmanager-ephemeral]
+    timeout-minutes: 15
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 运行证据文件验证
+      - name: 运行证据文件格式验证
         run: bash scripts/validate-evidence.sh
 
-  sha256-integrity:
-    name: SHA256 校验和完整性
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
       - name: 验证所有 SHA256SUMS 文件
+        shell: /bin/bash
         run: |
           set -euo pipefail
           ERRORS=0
-          
+
           while IFS= read -r -d '' sumfile; do
             echo "::group::验证 $sumfile"
             sumdir="$(dirname "$sumfile")"
-            
+
             while IFS= read -r line; do
               [[ -z "$line" ]] && continue
               expected="${line%%  *}"
               filename="${line#*  }"
               filename="${filename#\*}"
-              
+
               target="$sumdir/$filename"
               if [[ ! -f "$target" ]]; then
                 # private/ 在 .gitignore 中，跳过
@@ -54,62 +50,52 @@ jobs:
                 echo "::warning::$sumfile: 引用文件不存在 — $filename"
                 continue
               fi
-              
-              actual="$(sha256sum "$target" | awk '{print $1}')"
+
+              actual="$(shasum -a 256 "$target" | awk '{print $1}')"
               if [[ "$actual" != "$expected" ]]; then
                 echo "::error::$sumfile: 校验失败 — $filename"
                 ERRORS=$((ERRORS + 1))
               fi
             done < "$sumfile"
-            
+
             echo "::endgroup::"
           done < <(find evidence -type f \( -name "SHA256SUMS" -o -name "*.sha256" \) -print0 2>/dev/null)
-          
+
           if [[ $ERRORS -gt 0 ]]; then
             echo "::error::SHA256 校验失败: $ERRORS 个文件不匹配"
             exit 1
           fi
           echo "所有 SHA256 校验和验证通过"
 
-  markdown-structure:
-    name: Markdown 证据结构检查
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
       - name: 检查证据 Markdown 文件基本结构
+        shell: /bin/bash
         run: |
           set -euo pipefail
           ERRORS=0
           CHECKED=0
-          
+
           while IFS= read -r -d '' mdfile; do
             CHECKED=$((CHECKED + 1))
             basename="$(basename "$mdfile")"
-            
+
             # 跳过 README
             [[ "$basename" == "README.md" ]] && continue
-            
-            # 非空检查
+
             if [[ ! -s "$mdfile" ]]; then
               echo "::error::$mdfile: 文件为空"
               ERRORS=$((ERRORS + 1))
               continue
             fi
-            
-            # H1 标题检查
+
             first_line="$(head -1 "$mdfile")"
             if [[ "$first_line" != "# "* ]]; then
               echo "::error::$mdfile: 首行不是 H1 标题"
               ERRORS=$((ERRORS + 1))
             fi
           done < <(find evidence -type f -name "*.md" -print0 2>/dev/null)
-          
+
           echo "检查了 $CHECKED 个 Markdown 文件, $ERRORS 个错误"
-          
+
           if [[ $ERRORS -gt 0 ]]; then
             echo "::error::Markdown 结构检查失败: $ERRORS 个文件有问题"
             exit 1
