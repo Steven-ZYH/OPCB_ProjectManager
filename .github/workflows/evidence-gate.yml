@@ -16,7 +16,9 @@ jobs:
     name: 证据文件格式验证
     permissions:
       contents: read
-    runs-on: [self-hosted, macOS, ARM64, opcb-projectmanager-ephemeral]
+    # Candidate code must run in a disposable Tart VM whose disk is destroyed
+    # after the job; --ephemeral registration alone is not a filesystem reset.
+    runs-on: [self-hosted, macOS, ARM64, opcb-projectmanager-untrusted-tart-ephemeral]
     timeout-minutes: 15
 
     steps:
@@ -99,9 +101,9 @@ jobs:
       contents: read
       pull-requests: read
       statuses: write
-    # No candidate files are checked out here. Register a second ephemeral
-    # runner for this trusted control-plane job after the validation job ends.
-    runs-on: [self-hosted, macOS, ARM64, opcb-projectmanager-ephemeral]
+    # This must be a distinct trusted runner identity and workspace. Never run
+    # it under the OS user or runner directory that executed candidate code.
+    runs-on: [self-hosted, macOS, ARM64, opcb-projectmanager-trusted-control]
     timeout-minutes: 10
 
     steps:
@@ -115,17 +117,16 @@ jobs:
         run: |
           set -euo pipefail
           api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY"
-          current_head="$(curl -4 --http1.1 --retry 3 --retry-delay 1 -fsS \
+          read -r current_head merge_sha < <(curl -4 --http1.1 \
+            --retry 3 --retry-delay 1 -fsS \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "$api/pulls/$PR_NUMBER" | jq -r '.head.sha')"
+            "$api/pulls/$PR_NUMBER" | jq -r '[.head.sha, .merge_commit_sha] | @tsv')
           [[ "$current_head" == "$HEAD_SHA" ]] || {
             echo "PR head changed during validation; refusing stale statuses"
             exit 0
           }
-          merge_sha="$(git ls-remote "https://github.com/$GITHUB_REPOSITORY.git" \
-            "refs/pull/$PR_NUMBER/merge" | awk 'NR==1 {print $1}')"
-          [[ -n "$merge_sha" ]] || {
+          [[ -n "$merge_sha" && "$merge_sha" != "null" ]] || {
             echo "PR merge ref unavailable; refusing to publish statuses"
             exit 0
           }
