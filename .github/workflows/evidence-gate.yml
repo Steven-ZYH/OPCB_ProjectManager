@@ -132,10 +132,14 @@ jobs:
           }
           state=success
           [[ "$VALIDATION_RESULT" == "success" ]] || state=failure
+          # Required status contexts are evaluated on the PR head commit. The
+          # synthetic merge SHA is intentionally checked above but not used as
+          # the status target because GitHub may regenerate it without a head
+          # or base change.
           post_status() {
             local context="$1"
             curl -4 --http1.1 --retry 3 --retry-delay 1 -fsS -X POST \
-              "$api/statuses/$merge_sha" \
+              "$api/statuses/$current_head" \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
