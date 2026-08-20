@@ -1,117 +1,152 @@
 name: Evidence Gate
 
+# This workflow is trusted: pull_request_target loads the definition from the
+# default branch, so candidate PRs cannot widen permissions or add token steps.
 on:
-  pull_request:
+  pull_request_target:
     branches: [main]
-  push:
-    branches: [main]
+    types: [opened, synchronize, reopened]
 
 concurrency:
-  group: evidence-gate-${{ github.ref }}
+  group: evidence-gate-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  validate-evidence:
+  evidence-gate:
     name: 证据文件格式验证
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+    permissions:
+      contents: read
+    # Candidate code must run in a disposable Tart VM whose disk is destroyed
+    # after the job; --ephemeral registration alone is not a filesystem reset.
+    runs-on: [self-hosted, macOS, ARM64, opcb-projectmanager-untrusted-tart-ephemeral]
+    timeout-minutes: 15
 
     steps:
-      - name: 检出代码
+      - name: 检出候选代码（不持久化 Git 凭据）
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
 
-      - name: 运行证据文件验证
+      - name: 运行证据文件格式验证
         run: bash scripts/validate-evidence.sh
 
-  sha256-integrity:
-    name: SHA256 校验和完整性
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
       - name: 验证所有 SHA256SUMS 文件
+        shell: bash
         run: |
           set -euo pipefail
           ERRORS=0
-          
           while IFS= read -r -d '' sumfile; do
             echo "::group::验证 $sumfile"
             sumdir="$(dirname "$sumfile")"
-            
             while IFS= read -r line; do
               [[ -z "$line" ]] && continue
               expected="${line%%  *}"
               filename="${line#*  }"
               filename="${filename#\*}"
-              
               target="$sumdir/$filename"
               if [[ ! -f "$target" ]]; then
-                # private/ 在 .gitignore 中，跳过
                 [[ "$filename" == private/* ]] && continue
                 echo "::warning::$sumfile: 引用文件不存在 — $filename"
                 continue
               fi
-              
-              actual="$(sha256sum "$target" | awk '{print $1}')"
+              actual="$(shasum -a 256 "$target" | awk '{print $1}')"
               if [[ "$actual" != "$expected" ]]; then
                 echo "::error::$sumfile: 校验失败 — $filename"
                 ERRORS=$((ERRORS + 1))
               fi
             done < "$sumfile"
-            
             echo "::endgroup::"
           done < <(find evidence -type f \( -name "SHA256SUMS" -o -name "*.sha256" \) -print0 2>/dev/null)
-          
           if [[ $ERRORS -gt 0 ]]; then
             echo "::error::SHA256 校验失败: $ERRORS 个文件不匹配"
             exit 1
           fi
           echo "所有 SHA256 校验和验证通过"
 
-  markdown-structure:
-    name: Markdown 证据结构检查
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
       - name: 检查证据 Markdown 文件基本结构
+        shell: bash
         run: |
           set -euo pipefail
           ERRORS=0
           CHECKED=0
-          
           while IFS= read -r -d '' mdfile; do
             CHECKED=$((CHECKED + 1))
             basename="$(basename "$mdfile")"
-            
-            # 跳过 README
             [[ "$basename" == "README.md" ]] && continue
-            
-            # 非空检查
             if [[ ! -s "$mdfile" ]]; then
               echo "::error::$mdfile: 文件为空"
               ERRORS=$((ERRORS + 1))
               continue
             fi
-            
-            # H1 标题检查
             first_line="$(head -1 "$mdfile")"
             if [[ "$first_line" != "# "* ]]; then
               echo "::error::$mdfile: 首行不是 H1 标题"
               ERRORS=$((ERRORS + 1))
             fi
           done < <(find evidence -type f -name "*.md" -print0 2>/dev/null)
-          
           echo "检查了 $CHECKED 个 Markdown 文件, $ERRORS 个错误"
-          
           if [[ $ERRORS -gt 0 ]]; then
             echo "::error::Markdown 结构检查失败: $ERRORS 个文件有问题"
             exit 1
           fi
           echo "所有 Markdown 证据文件结构正确"
+
+  publish-status:
+    name: 发布受信 required status contexts
+    if: ${{ always() }}
+    needs: evidence-gate
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    # This must be a distinct trusted runner identity and workspace. Never run
+    # it under the OS user or runner directory that executed candidate code.
+    runs-on: [self-hosted, macOS, ARM64, opcb-projectmanager-trusted-control]
+    timeout-minutes: 10
+
+    steps:
+      - name: 发布 required status contexts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          VALIDATION_RESULT: ${{ needs.evidence-gate.result }}
+        run: |
+          set -euo pipefail
+          api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY"
+          read -r current_head merge_sha < <(curl -4 --http1.1 \
+            --retry 3 --retry-delay 1 -fsS \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$api/pulls/$PR_NUMBER" | jq -r '[.head.sha, .merge_commit_sha] | @tsv')
+          [[ "$current_head" == "$HEAD_SHA" ]] || {
+            echo "PR head changed during validation; refusing stale statuses"
+            exit 0
+          }
+          [[ -n "$merge_sha" && "$merge_sha" != "null" ]] || {
+            echo "PR merge ref unavailable; refusing to publish statuses"
+            exit 0
+          }
+          state=success
+          [[ "$VALIDATION_RESULT" == "success" ]] || state=failure
+          # Required status contexts are evaluated on the PR head commit. The
+          # synthetic merge SHA is intentionally checked above but not used as
+          # the status target because GitHub may regenerate it without a head
+          # or base change.
+          post_status() {
+            local context="$1"
+            curl -4 --http1.1 --retry 3 --retry-delay 1 -fsS -X POST \
+              "$api/statuses/$current_head" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/json" \
+              --data "{\"state\":\"$state\",\"context\":\"$context\",\"description\":\"Trusted Evidence Gate: $VALIDATION_RESULT\"}" \
+              >/dev/null
+          }
+          post_status "证据文件格式验证"
+          post_status "SHA256 校验和完整性"
+          post_status "Markdown 证据结构检查"
